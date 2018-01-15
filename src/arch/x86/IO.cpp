@@ -1,0 +1,47 @@
+#include <arch/x86/IO.hpp>
+
+/* 
+   x86 I/O port communication file
+
+   Copyright (C) 2018 Arthur M
+ */
+
+
+uint8_t annos::x86::in8(uint16_t port)
+{
+    uint8_t val = 0;
+    asm("inb %1, %0" : "=a"(val) : "Nd"(port) );
+
+    return val;
+}
+
+void annos::x86::out8(uint16_t port, uint8_t val)
+{
+    asm("outb %0, %1" : : "a"(val), "Nd"(port) );
+}
+
+uint16_t annos::x86::in16(uint16_t port)
+{
+    uint16_t val = 0;
+    asm("inw %1, %0" : "=a"(val) : "Nd"(port) );
+
+    return val;
+}
+
+void annos::x86::out16(uint16_t port, uint16_t val)
+{
+    asm("outw %0, %1" : : "a"(val), "Nd"(port) );
+}
+
+uint32_t annos::x86::in32(uint16_t port)
+{
+    uint32_t val = 0;
+    asm("inl %1, %0" : "=a"(val) : "Nd"(port) );
+
+    return val;
+}
+
+void out32(uint16_t port, uint32_t val)
+{
+    asm("outl %0, %1" : : "a"(val), "Nd"(port) );
+}

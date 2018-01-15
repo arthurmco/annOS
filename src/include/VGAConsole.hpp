@@ -1,5 +1,11 @@
 #pragma once
 
+/* 
+   Console implementation on vga text-mode screens
+
+   Copyright (C) 2018 Arthur M
+ */
+
 #include <Console.hpp>
 
 namespace annos {

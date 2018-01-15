@@ -16,7 +16,7 @@ CXX_CTORS_START = src/boot/x86/crti.o \
 CXX_CTORS_END = $(shell $(CXX) $(CXXFLAGS) -print-file-name=crtend.o) \
 		src/boot/x86/crtn.o
 
-X86_ARCH = src/boot/x86/entry.o
+X86_ARCH = src/boot/x86/entry.o src/arch/x86/IO.o
 
 KERNEL_COMMON= src/main.o src/VGAConsole.o
 # List of targets

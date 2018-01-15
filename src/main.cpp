@@ -1,4 +1,5 @@
 #include <VGAConsole.hpp>
+#include <arch/x86/IO.hpp>
 
 using namespace annos;
 
@@ -7,6 +8,12 @@ extern "C" void __cxa_pure_virtual()
     asm ("cli; hlt");
 }
 
+void update_cursor() {
+    ::x86::out8(0x3d4, 0x0f);
+    ::x86::out8(0x3d5, 2);
+    ::x86::out8(0x3d4, 0x0e);
+    ::x86::out8(0x3d5, 0);    
+}
 
 void write_letter() {
     unsigned short* fb = (unsigned short*)0xb8000;
@@ -19,14 +26,12 @@ int kernel_main(void) {
     int b = 2;
 
     write_letter();
-
+    
     VGAConsole v;
     v.Clear();
-    v.WriteVGA("Hello\n", BaseColors::Magenta);
-    v.WriteVGA("Os proprio preto num ta nem ai pra isso nao\n\n",
-	       BaseColors::White);
-    v.WriteVGA("Porque Dona Ana fez de mim um homem, nao uma puta\n");
-    
+    v.WriteVGA("annos v0.0.1\n", BaseColors::LightBlue);
+    v.WriteVGA("Copyright (C) 2018 Arthur M\n");
+    update_cursor();  
     
     return 0xdeadc0de + a + b;
 }
