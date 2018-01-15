@@ -21,7 +21,12 @@ int kernel_main(void) {
     write_letter();
 
     VGAConsole v;
-    v.WriteVGA("Hello", BaseColors::Magenta);
+    v.Clear();
+    v.WriteVGA("Hello\n", BaseColors::Magenta);
+    v.WriteVGA("Os proprio preto num ta nem ai pra isso nao\n\n",
+	       BaseColors::White);
+    v.WriteVGA("Porque Dona Ana fez de mim um homem, nao uma puta\n");
+    
     
     return 0xdeadc0de + a + b;
 }

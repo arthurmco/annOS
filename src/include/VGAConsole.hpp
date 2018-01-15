@@ -16,10 +16,13 @@ namespace annos {
 	
     public:
 	/* Write function for VGA-compatible output */
-	virtual void WriteVGA(const char* str, BaseColors color);
+	virtual void WriteVGA(const char* str,
+			      BaseColors color = BaseColors::LightGrey);
 	
 	/* Write function for RGB-compatible output */
 	virtual void WriteRGB(const char* str,
 			      uint8_t r, uint8_t g, uint8_t b);
+
+	virtual void Clear();
     };
 };

@@ -30,7 +30,18 @@ void VGAConsole::WriteVGA(const char* str, BaseColors color)
 	str++;
     }
 }
-	
+
+/* Clears the screen */
+void VGAConsole::Clear()
+{
+    for (auto i = 0; i < _width*_height; i++) {
+	_framebuffer[i] = 0x20; // Clears it all with a black space char
+    }
+
+    _xPos = 0;
+    _yPos = 0;
+}
+
 /* Write function for RGB-compatible output */
 void VGAConsole::WriteRGB(const char* str, uint8_t r, uint8_t g, uint8_t b)
 {
