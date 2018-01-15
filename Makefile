@@ -24,6 +24,9 @@ KERNEL_COMMON= src/main.o
 
 all: annos
 
+qemu-run: annos
+	qemu-system-x86_64 -kernel $(OUT) -serial stdio
+
 annos: $(CXX_CTORS_START) $(X86_ARCH) $(KERNEL_COMMON) $(CXX_CTORS_END)
 	$(CXX) -T linker.ld -o $(OUT) $(CXXFLAGS) -lgcc $^ $(LDFLAGS)
 
