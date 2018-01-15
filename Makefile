@@ -26,6 +26,10 @@ all: annos
 qemu-run: annos
 	qemu-system-x86_64 -kernel $(OUT) -serial stdio
 
+iso: annos
+	cp $(OUT) iso/boot
+	grub-mkrescue -o $(OUT).iso iso/
+
 annos: $(CXX_CTORS_START) $(X86_ARCH) $(KERNEL_COMMON) $(CXX_CTORS_END)
 	$(CXX) -T linker.ld -o $(OUT) $(CXXINCLUDES) $(CXXFLAGS) -lgcc $^ $(LDFLAGS)
 

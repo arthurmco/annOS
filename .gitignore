@@ -1,3 +1,5 @@
 annos.elf
 
+*.iso
+.bochsrc
 *.o
