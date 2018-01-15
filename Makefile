@@ -5,7 +5,6 @@ CXX=/usr/local/gcc-7.2.0/bin/i686-elf-g++
 AS=/usr/local/gcc-7.2.0/bin/i686-elf-as
 
 CXXFLAGS= -std=gnu++14 -ffreestanding -nostdlib -Wall -m32 -fno-exceptions -fno-rtti
-
 CXXINCLUDES= -I$(CURDIR)/src/include
 LDFLAGS=-lgcc -g
 
@@ -19,7 +18,7 @@ CXX_CTORS_END = $(shell $(CXX) $(CXXFLAGS) -print-file-name=crtend.o) \
 
 X86_ARCH = src/boot/x86/entry.o
 
-KERNEL_COMMON= src/main.o
+KERNEL_COMMON= src/main.o src/VGAConsole.o
 # List of targets
 
 all: annos
@@ -28,13 +27,13 @@ qemu-run: annos
 	qemu-system-x86_64 -kernel $(OUT) -serial stdio
 
 annos: $(CXX_CTORS_START) $(X86_ARCH) $(KERNEL_COMMON) $(CXX_CTORS_END)
-	$(CXX) -T linker.ld -o $(OUT) $(CXXFLAGS) -lgcc $^ $(LDFLAGS)
+	$(CXX) -T linker.ld -o $(OUT) $(CXXINCLUDES) $(CXXFLAGS) -lgcc $^ $(LDFLAGS)
 
 %.o: %.S
 	$(AS) -o $@ $< $(ASMFLAGS)
 
 %.o: %.cpp
-	$(CXX) -o $@ -c $< $(CXXFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ -c $< $(CXXINCLUDES) $(CXXFLAGS) $(LDFLAGS)
 
 clean:
 	find . -name "*.o" -type f -delete
