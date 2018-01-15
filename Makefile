@@ -12,8 +12,10 @@ LDFLAGS=-lgcc -g
 OUT=annos.elf
 
 # List of files, by group
-CXX_CTORS_START = crt0.o crti.o $(shell $(CXX) $(CXXFLAGS) -print-file-name=crtbegin.o)
-CXX_CTORS_END = $(shell $(CXX) $(CXXFLAGS) -print-file-name=crtend.o) crtn.o
+CXX_CTORS_START = src/boot/x86/crti.o \
+		  $(shell $(CXX) $(CXXFLAGS) -print-file-name=crtbegin.o)
+CXX_CTORS_END = $(shell $(CXX) $(CXXFLAGS) -print-file-name=crtend.o) \
+		src/boot/x86/crtn.o
 
 X86_ARCH = src/boot/x86/entry.o
 
@@ -22,7 +24,7 @@ KERNEL_COMMON= src/main.o
 
 all: annos
 
-annos: $(X86_ARCH) $(KERNEL_COMMON)
+annos: $(CXX_CTORS_START) $(X86_ARCH) $(KERNEL_COMMON) $(CXX_CTORS_END)
 	$(CXX) -T linker.ld -o $(OUT) $(CXXFLAGS) -lgcc $^ $(LDFLAGS)
 
 %.o: %.S
