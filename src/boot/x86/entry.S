@@ -33,10 +33,25 @@ stack_top:
 _start:
 	mov $stack_top, %esp	// Sets the stack
 
-// TODO: Initialize GDT
+gdt_init:
+//Initialize GDT
+	mov $gdt_descriptor, %ebx
+	lgdt (%ebx)
+	jmp $0x08, $.gdt_reload
+	
+	.gdt_reload:
+	movw $0x10, %ax
+	movw %ax, %ds
+	movw %ax, %es
+	movw %ax, %fs
+	movw %ax, %gs
+	movw %ax, %ss
+	jmp main_init
+	
 // TODO: Initialize IDT
 // TODO: Initialize paging
 
+main_init:	
 	movl $0xb8004, %ebx
 	movw $0x0f41, %cx
 	movw %cx, (%ebx)
@@ -47,5 +62,30 @@ _start:
 _end:
 	hlt
 	jmp _end
+
+.align 16
+gdt_descriptor:
+	.word (gdt_tables_end - gdt_tables) - 1
+	.long gdt_tables
+
+.align 16	
+gdt_tables:
 	
+	// 0: the null table
+	.long 0
+	.long 0
+
+	// 1: the kernel code descriptior
+	.long 0x0000ffff
+	.long 0x00CF9A00
+
+	// 2: the kernel data description
+	.long 0x0000ffff
+	.long 0x00CF9200		
+gdt_tables_end:	
 	
+	// 3: the usermode code description
+	.long 0x0000ffff
+	
+	// 4: the usermode data description
+	.long 0x0000ffff	
