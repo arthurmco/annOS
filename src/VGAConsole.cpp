@@ -1,6 +1,17 @@
 #include <VGAConsole.hpp>
+#include <arch/x86/IO.hpp>
 
 using namespace annos;
+
+static void update_cursor(uint16_t x, uint16_t y, uint16_t w)
+{
+    uint16_t pos = (y * w) + x;
+    
+    ::x86::out8(0x3d4, 0x0f);
+    ::x86::out8(0x3d5, (pos & 0xff));
+    ::x86::out8(0x3d4, 0x0e);
+    ::x86::out8(0x3d5, (pos >> 8));    
+}
 
 void VGAConsole::WriteChar(const char c, BaseColors fgcolor)
 {
@@ -19,7 +30,7 @@ void VGAConsole::WriteChar(const char c, BaseColors fgcolor)
 	_xPos = 0;
 	_yPos++;
     }
-    
+   
 }
 
 /* Write function for VGA-compatible output */
@@ -29,13 +40,15 @@ void VGAConsole::WriteVGA(const char* str, BaseColors color)
 	this->WriteChar(*str, color);
 	str++;
     }
+    update_cursor(_xPos, _yPos, _width);
 }
 
 /* Clears the screen */
 void VGAConsole::Clear()
 {
     for (auto i = 0; i < _width*_height; i++) {
-	_framebuffer[i] = 0x20; // Clears it all with a black space char
+	// Clears it all with a black space char in white foreground
+	_framebuffer[i] = 0x0720; 
     }
 
     _xPos = 0;
