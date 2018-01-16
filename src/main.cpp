@@ -1,15 +1,32 @@
 #include <VGAConsole.hpp>
 #include <arch/x86/IO.hpp>
 
+#include <libk/stdio.h>
+#include <libk/stdlib.h>
+
 using namespace annos;
+
+void _assert(int expr, const char* file, int line)
+{
+    if (!expr) {
+	VGAConsole v;
+	v.WriteVGA("Assertion failed at ");
+	v.WriteVGA(file);
+	v.WriteVGA(":");
+
+	char strline[32];
+	itoa(line, strline);
+	
+	v.WriteVGA(strline); 
+	v.WriteVGA(". System halted");
+	    
+	asm volatile("cli; hlt");
+    }
+}
 
 extern "C" void __cxa_pure_virtual()
 {
     asm ("cli; hlt");
-}
-void write_letter() {
-    unsigned short* fb = (unsigned short*)0xb8000;
-    fb[0] = (unsigned short)'H' | (unsigned short) 0xf0 << 8;
 }
 
 extern "C"
@@ -17,12 +34,20 @@ int kernel_main(void) {
     int a = 2;
     int b = 2;
 
-    write_letter();
-    
     VGAConsole v;
     v.Clear();
     v.WriteVGA("annos v0.0.1\n", BaseColors::LightBlue);
     v.WriteVGA("Copyright (C) 2018 Arthur M\n");
+
+    char itoa_test[8];
+    memset((void*)itoa_test, 0, 7);
+    
+    itoa(0x2480, itoa_test);
+    v.WriteVGA((const char*)itoa_test);
+
+    v.WriteVGA(" - ", BaseColors::LightMagenta);
+    itoa(atoi("200"), itoa_test);
+    v.WriteVGA((const char*)itoa_test);
     
     return 0xdeadc0de + a + b;
 }

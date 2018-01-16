@@ -3,6 +3,7 @@
 
 using namespace annos;
 
+uint16_t* VGAConsole::_framebuffer = (uint16_t*)0xB8000;
 static void update_cursor(uint16_t x, uint16_t y, uint16_t w)
 {
     uint16_t pos = (y * w) + x;

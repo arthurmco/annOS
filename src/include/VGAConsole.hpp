@@ -12,7 +12,7 @@ namespace annos {
     class VGAConsole : public Console {
     private:
 	// The location of the VGA framebuffer
-	uint16_t* _framebuffer = (uint16_t*)0xB8000;
+	static uint16_t* _framebuffer;
 	uint8_t _xPos = 0, _yPos = 0;
 
 	const int _width = 80;
