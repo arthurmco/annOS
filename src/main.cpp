@@ -48,6 +48,10 @@ int kernel_main(void) {
     v.WriteVGA(" - ", BaseColors::LightMagenta);
     itoa(atoi("200"), itoa_test);
     v.WriteVGA((const char*)itoa_test);
+
+    init_stdio(&v);
+    kprintf("This is a test of printf: %8d %08x %s",
+	    0x100, 0x100, "100a");
     
     return 0xdeadc0de + a + b;
 }

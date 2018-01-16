@@ -20,7 +20,7 @@ X86_ARCH = src/boot/x86/entry.o src/arch/x86/IO.o
 
 KERNEL_COMMON= src/main.o src/VGAConsole.o src/Device.o
 
-LIBK_COMMON= src/libk/stdlib.o src/libk/stdio.o
+LIBK_COMMON= src/libk/stdlib.o src/libk/stdio.o src/libk/stdio_write.o
 # List of targets
 
 all: annos
