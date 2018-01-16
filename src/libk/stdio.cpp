@@ -1,10 +1,7 @@
 #include <libk/stdio.h>
 #include <libk/stdlib.h>
 #include <stdarg.h>
-
-#define assert(expr) _assert(expr, __FILE__, __LINE__)
-
-extern void _assert(int expr, const char* file, int line);
+#include <libk/panic.h>
 
 size_t strlen(const char* str)
 {
