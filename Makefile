@@ -18,7 +18,7 @@ CXX_CTORS_END = $(shell $(CXX) $(CXXFLAGS) -print-file-name=crtend.o) \
 
 X86_ARCH = src/boot/x86/entry.o src/arch/x86/IO.o
 
-KERNEL_COMMON= src/main.o src/VGAConsole.o
+KERNEL_COMMON= src/main.o src/VGAConsole.o src/Device.o
 # List of targets
 
 all: annos
