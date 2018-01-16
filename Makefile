@@ -19,9 +19,15 @@ CXX_CTORS_END = $(shell $(CXX) $(CXXFLAGS) -print-file-name=crtend.o) \
 X86_ARCH = src/boot/x86/entry.o src/arch/x86/IO.o
 
 KERNEL_COMMON= src/main.o src/VGAConsole.o src/Device.o
+
+LIBK_COMMON= src/libk/stdlib.o src/libk/stdio.o
 # List of targets
 
 all: annos
+
+qemu-run-debug: annos
+	echo "Debugger ready at localhost:1234"
+	qemu-system-i386 -kernel $(OUT) -serial stdio -s -S
 
 qemu-run: annos
 	qemu-system-x86_64 -kernel $(OUT) -serial stdio
@@ -30,7 +36,7 @@ iso: annos
 	cp $(OUT) iso/boot
 	grub-mkrescue -o $(OUT).iso iso/
 
-annos: $(CXX_CTORS_START) $(X86_ARCH) $(KERNEL_COMMON) $(CXX_CTORS_END)
+annos: $(CXX_CTORS_START) $(X86_ARCH) $(KERNEL_COMMON) $(CXX_CTORS_END) $(LIBK_COMMON)
 	$(CXX) -T linker.ld -o $(OUT) $(CXXINCLUDES) $(CXXFLAGS) -lgcc $^ $(LDFLAGS)
 
 %.o: %.S
