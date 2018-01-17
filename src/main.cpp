@@ -31,7 +31,7 @@ int kernel_main(void) {
 
     ::x86::i8259 oi8259;
     oi8259.Initialize();
-    kprintf("...%s\n", oi8259.GetTag());
+    kprintf("...%s ", oi8259.GetTag());
 
     ::x86::FaultHandler::Init(&idt);
     kprintf("...faulthandler ");

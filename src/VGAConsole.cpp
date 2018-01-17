@@ -68,8 +68,57 @@ void VGAConsole::WriteChar(const char c, BaseColors fgcolor)
 /* Write function for VGA-compatible output */
 void VGAConsole::WriteVGA(const char* str, BaseColors color)
 {
+    BaseColors setcolor = color;
     while (*str != '\0') {
-	this->WriteChar(*str, color);
+
+	// Process escape sequence
+	if (*str == '\033') {
+	    str++;
+	    bool escape_in = true;
+	    while (escape_in) {	    
+		switch (*str++) {
+		case '0': // Return to normal
+		    setcolor = color;
+		    break;
+			
+		case '1': // Bold
+		{
+		    int _sc = setcolor + 8;
+		    setcolor = (BaseColors)_sc;
+		}
+		break;
+		
+		case '3': // Set foreground
+		{
+		    bool bold = (setcolor >= 8);
+		    switch (*str++) {
+		    case '0': setcolor = BaseColors::Black; break;
+		    case '1': setcolor = BaseColors::Red; break;
+		    case '2': setcolor = BaseColors::Green; break;
+		    case '3': setcolor = BaseColors::Yellow; break;
+		    case '4': setcolor = BaseColors::Blue; break;
+		    case '5': setcolor = BaseColors::Magenta; break;
+		    case '6': setcolor = BaseColors::Cyan; break;
+		    case '7': setcolor = BaseColors::LightGrey; break;
+			
+		    }
+		    if (bold) {
+			int _sc = setcolor + 8;
+			setcolor = (BaseColors)_sc;
+		    }
+		}
+		break;
+		    
+		case 'm': //End
+		    escape_in = false;
+		    break;
+		
+		}
+		
+	    }
+	}
+	    
+	this->WriteChar(*str, setcolor);
 	str++;
     }
     update_cursor(_xPos, _yPos, _width);

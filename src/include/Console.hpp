@@ -31,6 +31,7 @@ namespace annos {
     
     class Console {
     public:
+	
 	/* Write function for VGA-compatible output */
 	virtual void WriteVGA(const char* str,
 			      BaseColors color = BaseColors::LightGrey) = 0;

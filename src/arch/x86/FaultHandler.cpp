@@ -56,15 +56,18 @@ extern "C" void fault14();    //Page fault
 extern "C" void FaultDispatcher(FaultRegs* regs)
 {
     kprintf("\n\n");
-    kprintf("\t panic: fatal exception #%d (%s), code %08x\n", regs->int_no,
+    kprintf("\t \033[1;131mpanic:\033[0m fatal exception #%d (%s), code %08x\n", regs->int_no,
 	    exceptionStr[regs->int_no], regs->error_code);
-    kprintf("\t\t eax: %08x\t ebx: %08x\n", regs->eax, regs->ebx);
-    kprintf("\t\t ecx: %08x\t edx: %08x\n", regs->ecx, regs->edx);
-    kprintf("\t\t edi: %08x\t esi: %08x\n", regs->edi, regs->esi);
-    kprintf("\t\t ebp: %08x\t ss:esp: %02x:%08x\n",
-	    regs->ebp, regs->ss, regs->esp);
-    kprintf("\t\t cs:eip: %02x:%08x  ds: %02x  es: %02x "
-	    " fs: %02x  gs: %02x\n",
+    kprintf("\t\t \033[1meax:\033[0m %08x\t \033[1mebx:\033[0m %08x"
+	    "\t \033[1mecx:\033[0m %08x\t \033[1medx\033[0m: %08x\n",
+	    regs->eax, regs->ebx, regs->ecx, regs->edx);
+    kprintf("\t\t \033[1medi:\033[0m %08x\t \033[1mesi:\033[0m %08x"
+	    "\t \033[1mebp:\033[0m %08x\t \033[1mss:esp:\033[0m %02x:%08x\n",
+	    regs->edi, regs->esi, regs->ebp, regs->ss, regs->esp);
+	    
+    kprintf("\t\t \033[1mcs:eip:\033[0m %02x:%08x  \033[1mds:\033[0m %02x"
+	    " \033[1mes:\033[0m %02x \033[1mfs:\033[0m %02x  "
+	    "\033[1mgs:\033[0m %02x\n",
 	    regs->cs, regs->eip, regs->ds, regs->es, regs->fs, regs->gs);
     
     char strflags[64];
@@ -83,7 +86,7 @@ extern "C" void FaultDispatcher(FaultRegs* regs)
     if (regs->eflags & 0x10000)    strcat(strflags, "RF "); // resume flag
     if (regs->eflags & 0x20000)    strcat(strflags, "VM "); //vm8086 flag
 	
-    kprintf("\t\t eflags: %08x [%s]\n\n", regs->eflags, strflags);
+    kprintf("\t\t \033[1meflags:\033[0m %08x [%s]\n\n", regs->eflags, strflags);
     asm("cli; hlt");
 }
 
