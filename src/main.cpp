@@ -14,7 +14,7 @@ using namespace annos;
 
 extern "C" void __cxa_pure_virtual()
 {
-    asm ("cli; hlt");
+    panic("called virtual function without body");
 }
 
 extern "C"
