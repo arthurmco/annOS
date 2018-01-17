@@ -73,7 +73,17 @@ static fnIRQHandler irqHandlers[16][MAX_IRQ_HANDLERS] = {};
  */
 extern "C" void IRQDispatcher(IRQRegs* regs)
 {    
-    kprintf("IRQ %d triggered\n", regs->irq_no);
+    kprintf("IRQ \033[1;36m%d\033[0m triggered\n", regs->irq_no);
+
+    size_t pos = 0;
+    while (irqHandlers[regs->irq_no][pos]) {
+	irqHandlers[regs->irq_no][pos](regs);
+	pos++;
+
+	if (pos >= MAX_IRQ_HANDLERS)
+	    break;
+    }
+	   
 
     _irq_control->SendEOI(regs->irq_no);
 }
