@@ -29,3 +29,6 @@ Please contribute, I'm going to love it :heart:
 Open a pull request if you like, check the issues, help me to improve it, if you 
 like. Have fun!
 
+## License
+
+All of this source code is licensed under the MIT license.
