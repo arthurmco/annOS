@@ -56,9 +56,35 @@ extern "C" void fault14();    //Page fault
 extern "C" void FaultDispatcher(FaultRegs* regs)
 {
     kprintf("\n\n");
-    kprintf("Exception code: %d (%s)\nCode %04x", regs->int_no,
+    kprintf("\t panic: fatal exception #%d (%s), code %08x\n", regs->int_no,
 	    exceptionStr[regs->int_no], regs->error_code);
+    kprintf("\t\t eax: %08x\t ebx: %08x\n", regs->eax, regs->ebx);
+    kprintf("\t\t eax: %08x\t ebx: %08x\n", regs->eax, regs->ebx);
+    kprintf("\t\t ecx: %08x\t edx: %08x\n", regs->ecx, regs->edx);
+    kprintf("\t\t edi: %08x\t esi: %08x\n", regs->edi, regs->esi);
+    kprintf("\t\t ebp: %08x\t ss:esp: %02x:%08x\n",
+	    regs->ebp, regs->ss, regs->old_esp);
+    kprintf("\t\t cs:eip: %02x:%08x  ds: %02x  es: %02x "
+	    " fs: %02x  gs: %02x\n",
+	    regs->cs, regs->eip, regs->ds, regs->es, regs->fs, regs->gs);
     
+    char strflags[64];
+    strflags[0] = '\0';
+    if (regs->eflags & 0x1)        strcat(strflags, "CF ");  //carry flag
+    if (regs->eflags & 0x4)        strcat(strflags, "PF ");  // parity flag
+    if (regs->eflags & 0x10)       strcat(strflags, "AF "); // arithmetic flag
+    if (regs->eflags & 0x40)       strcat(strflags, "ZF "); // zero flag
+    if (regs->eflags & 0x80)       strcat(strflags, "SF "); // sign flag
+    if (regs->eflags & 0x100)      strcat(strflags, "TF "); // trap flag
+    if (regs->eflags & 0x200)      strcat(strflags, "IF "); // Interr. enable flag
+    if (regs->eflags & 0x400)      strcat(strflags, "DF "); // direction flag
+    if (regs->eflags & 0x800)      strcat(strflags, "OF "); // overflow flag
+    if (regs->eflags & 0x4000)     strcat(strflags, "NT "); //nested task flag
+    if (regs->eflags & 0x10000)    strcat(strflags, "RF "); // resume flag
+    if (regs->eflags & 0x20000)    strcat(strflags, "VM "); //vm8086 flag
+	
+    kprintf("\t\t eflags: %08x [%s]\n\n", regs->eflags, strflags);
+    asm("cli; hlt");
 }
 
 IDT* FaultHandler::_idt;

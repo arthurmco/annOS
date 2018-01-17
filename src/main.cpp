@@ -33,7 +33,6 @@ int kernel_main(void) {
     
     kprintf("IDT ok\n");
     asm volatile("sti");
-    
 
     for (;;)
 	asm volatile("hlt");

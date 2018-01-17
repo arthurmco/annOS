@@ -33,7 +33,6 @@
 // Macro to insert an exception that doesn't push anything to the stack
 .macro fault_nocode faultnum
     fault\faultnum\() :
-    xchgw %bx, %bx
 	
     push $0x0       //  dummy error code
     push $\faultnum   //  the exception number
@@ -45,6 +44,7 @@
 //  (the double fault exception is a good example)
 .macro fault_code faultnum
     fault\faultnum\() :
+    cli
     push $\faultnum   //  the exception number
 
     jmp _fault_asm_common //  jump to common isr cdde
@@ -95,7 +95,8 @@ _fault_asm_common:
 	pop %gs
 	pop %fs
 	pop %es
-		pop %ds
+	pop %ds
+	
 	popal
 	add $8, %esp //  Clear the exception number and code
 	iret	//  Return from executing code before the exception call.
