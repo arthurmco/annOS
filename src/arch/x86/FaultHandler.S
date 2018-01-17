@@ -88,7 +88,7 @@ _fault_asm_common:
 	push %eax
 	
 	movl $FaultDispatcher, %eax
-	call *%eax  //  Bran say this preserves the EIP register
+  	call *%eax  //  Bran say this preserves the EIP register
 	
 	//  Undo everything IN REVERSE ORDER
 	pop %eax

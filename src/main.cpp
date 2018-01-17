@@ -3,6 +3,7 @@
 #include <arch/x86/IDT.hpp>
 #include <arch/x86/i8259.hpp>
 #include <arch/x86/FaultHandler.hpp>
+#include <arch/x86/IRQHandler.hpp>
 
 #include <libk/stdio.h>
 #include <libk/stdlib.h>
@@ -16,7 +17,7 @@ extern "C" void __cxa_pure_virtual()
 }
 
 extern "C"
-int kernel_main(void) {
+void kernel_main(void) {
 
     VGAConsole v;
     v.Clear();
@@ -36,11 +37,12 @@ int kernel_main(void) {
     ::x86::FaultHandler::Init(&idt);
     kprintf("...faulthandler ");
 
-
+    ::x86::IRQHandler::Init(&idt, &oi8259);
+    kprintf("...irqhandler ");
     
     asm volatile("sti");
+    
+    for (;;)
+	asm volatile("hlt");
 
-    asm volatile("hlt");
-
-    return 0xdeadbeef;
 }

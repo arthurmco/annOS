@@ -59,7 +59,7 @@ namespace annos::x86 {
     class FaultHandler {
     private:
 	static IDT* _idt;
-	
+
     public:
 	
 	/**
