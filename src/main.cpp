@@ -1,4 +1,5 @@
 #include <VGAConsole.hpp>
+#include <Log.hpp>
 #include <arch/x86/IO.hpp>
 #include <arch/x86/IDT.hpp>
 #include <arch/x86/i8259.hpp>
@@ -25,6 +26,7 @@ void kernel_main(void) {
     v.WriteVGA("Copyright (C) 2018 Arthur M\n");
 
     init_stdio(&v);
+    Log::Init(&v);
     
     ::x86::IDT idt;
     idt.Register();
@@ -38,11 +40,14 @@ void kernel_main(void) {
     kprintf("...faulthandler ");
 
     ::x86::IRQHandler::Init(&idt, &oi8259);
-    kprintf("...irqhandler ");
+    kprintf("...irqhandler\n ");
+
+    Log::Write(LogLevel::Error, "test", "Notice");
     
     asm volatile("sti");
     
-    for (;;)
+    for (;;) {
 	asm volatile("hlt");
+    }
 
 }
