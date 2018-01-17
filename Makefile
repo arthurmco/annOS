@@ -11,17 +11,19 @@ LDFLAGS=-lgcc -g
 OUT=annos.elf
 
 # List of files, by group
-CXX_CTORS_START = src/boot/x86/crti.o \
+CXX_CTORS_START = src/boot/x86/crti.S.o \
 		  $(shell $(CXX) $(CXXFLAGS) -print-file-name=crtbegin.o)
 CXX_CTORS_END = $(shell $(CXX) $(CXXFLAGS) -print-file-name=crtend.o) \
-		src/boot/x86/crtn.o
+		src/boot/x86/crtn.S.o
 
-X86_ARCH = src/boot/x86/entry.o src/arch/x86/IO.o
+X86_ARCH = src/boot/x86/entry.S.o src/arch/x86/IO.cpp.o src/arch/x86/IDT.cpp.o \
+	   src/arch/x86/IDT.S.o src/arch/x86/FaultHandler.cpp.o \
+	   src/arch/x86/FaultHandler.S.o
 
-KERNEL_COMMON= src/main.o src/VGAConsole.o src/Device.o
+KERNEL_COMMON= src/main.cpp.o src/VGAConsole.cpp.o src/Device.cpp.o
 
-LIBK_COMMON= src/libk/stdlib.o src/libk/stdio.o src/libk/stdio_write.o \
-	     src/libk/panic.o
+LIBK_COMMON= src/libk/stdlib.cpp.o src/libk/stdio.cpp.o \
+             src/libk/stdio_write.cpp.o src/libk/panic.cpp.o
 # List of targets
 
 all: annos
@@ -40,10 +42,10 @@ iso: annos
 annos: $(CXX_CTORS_START) $(X86_ARCH) $(KERNEL_COMMON) $(CXX_CTORS_END) $(LIBK_COMMON)
 	$(CXX) -T linker.ld -o $(OUT) $(CXXINCLUDES) $(CXXFLAGS) -lgcc $^ $(LDFLAGS)
 
-%.o: %.S
+%.S.o: %.S
 	$(AS) -o $@ $< $(ASMFLAGS)
 
-%.o: %.cpp
+%.cpp.o: %.cpp
 	$(CXX) -o $@ -c $< $(CXXINCLUDES) $(CXXFLAGS) $(LDFLAGS)
 
 clean:
