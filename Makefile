@@ -3,6 +3,7 @@
 
 CXX=/usr/local/gcc-7.2.0/bin/i686-elf-g++
 AS=/usr/local/gcc-7.2.0/bin/i686-elf-as
+QEMU=qemu-system-i386
 
 CXXFLAGS= -std=gnu++14 -ffreestanding -nostdlib -Wall -m32 -fno-exceptions -fno-rtti
 CXXINCLUDES= -I$(CURDIR)/src/include
@@ -30,10 +31,10 @@ all: annos
 
 qemu-run-debug: annos
 	echo "Debugger ready at localhost:1234"
-	qemu-system-i386 -kernel $(OUT) -serial stdio -s -S
+	$(QEMU) -kernel $(OUT) -serial stdio -s -S
 
 qemu-run: annos
-	qemu-system-x86_64 -kernel $(OUT) -serial stdio
+	$(QEMU) -kernel $(OUT) -serial stdio
 
 iso: annos
 	cp $(OUT) iso/boot
