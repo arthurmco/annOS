@@ -18,7 +18,7 @@ CXX_CTORS_END = $(shell $(CXX) $(CXXFLAGS) -print-file-name=crtend.o) \
 
 X86_ARCH = src/boot/x86/entry.S.o src/arch/x86/IO.cpp.o src/arch/x86/IDT.cpp.o \
 	   src/arch/x86/IDT.S.o src/arch/x86/FaultHandler.cpp.o \
-	   src/arch/x86/FaultHandler.S.o
+	   src/arch/x86/FaultHandler.S.o src/arch/x86/i8259.cpp.o
 
 KERNEL_COMMON= src/main.cpp.o src/VGAConsole.cpp.o src/Device.cpp.o
 

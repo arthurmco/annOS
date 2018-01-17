@@ -22,7 +22,7 @@
 
 	.align 16
 stack_bottom:
-	.skip 8192
+	.skip 16384
 stack_top:
 
 // Entry point

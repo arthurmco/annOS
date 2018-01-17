@@ -59,17 +59,17 @@ extern "C" void FaultDispatcher(FaultRegs* regs)
     kprintf("\t panic: fatal exception #%d (%s), code %08x\n", regs->int_no,
 	    exceptionStr[regs->int_no], regs->error_code);
     kprintf("\t\t eax: %08x\t ebx: %08x\n", regs->eax, regs->ebx);
-    kprintf("\t\t eax: %08x\t ebx: %08x\n", regs->eax, regs->ebx);
     kprintf("\t\t ecx: %08x\t edx: %08x\n", regs->ecx, regs->edx);
     kprintf("\t\t edi: %08x\t esi: %08x\n", regs->edi, regs->esi);
     kprintf("\t\t ebp: %08x\t ss:esp: %02x:%08x\n",
-	    regs->ebp, regs->ss, regs->old_esp);
+	    regs->ebp, regs->ss, regs->esp);
     kprintf("\t\t cs:eip: %02x:%08x  ds: %02x  es: %02x "
 	    " fs: %02x  gs: %02x\n",
 	    regs->cs, regs->eip, regs->ds, regs->es, regs->fs, regs->gs);
     
     char strflags[64];
-    strflags[0] = '\0';
+    strflags[0] = ' ';
+    strflags[1] = '\0';
     if (regs->eflags & 0x1)        strcat(strflags, "CF ");  //carry flag
     if (regs->eflags & 0x4)        strcat(strflags, "PF ");  // parity flag
     if (regs->eflags & 0x10)       strcat(strflags, "AF "); // arithmetic flag
