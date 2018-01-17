@@ -14,8 +14,8 @@ You can use other compiler, given that it supports the `__attribute__((packed))`
 You'll have to build it. [Here](http://wiki.osdev.org/GCC_Cross-Compiler "link to OSDEV tutorial") you'll find instructions. Download [this binutils](https://ftp.gnu.org/gnu/binutils/binutils-2.29.tar.xz) and [this GCC](https://ftp.gnu.org/gnu/gcc/gcc-7.2.0/gcc-7.2.0.tar.xz) and use them in the tutorial, because it's what I'm 
 using now.
 
-Please set the `CXX`, `AS` an `QEMU` to point to the path of your new 
-`i686-elf-g++`, `i686-elf-as` and `qemu-system-i386`.
+Please set the `CXX`, `AS` an `QEMU` variables in the makefile to point to 
+the path of your new `i686-elf-g++`, `i686-elf-as` and `qemu-system-i386`.
 
 ## Running
 
