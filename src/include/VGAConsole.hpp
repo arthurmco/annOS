@@ -15,10 +15,12 @@ namespace annos {
 	static uint16_t* _framebuffer;
 	uint8_t _xPos = 0, _yPos = 0;
 
-	const int _width = 80;
-	const int _height = 25;
+	const unsigned _width = 80;
+	const unsigned _height = 25;
 
 	void WriteChar(const char c, BaseColors color);
+
+	void Scroll();
 	
     public:
 	/* Write function for VGA-compatible output */
