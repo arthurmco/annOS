@@ -4,7 +4,7 @@
 void _assert(int expr, const char* file, int line)
 {
     if (!expr) {
-	kprintf("\nAssertion failed at %s:%d. System halted\n",
+	kprintf("\n\nAssertion failed at %s:%d. System halted\n",
 		file, line);
 	
 	asm volatile("cli; hlt");

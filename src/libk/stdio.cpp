@@ -67,10 +67,10 @@ inline void _inttostr(uint64_t num, int base, char* retchar, int padding=0,
     str[i++] = table[num];
     str[i] = '\0';
     
-    for (size_t p = i; p < padding; p++) {
+    for (size_t p = i; p < (size_t)padding; p++) {
 	str[p] = padchar;
 
-	if (p == (padding-1))
+	if (p == ((size_t)padding-1))
 	    str[p+1] = '\0';
     }
     
@@ -97,7 +97,7 @@ inline uint64_t _strtoint(const char* str, int base)
 	if (c >= 'a' && c <= 'z')
 	    snum = (c - 'a') + 10;
 
-	assert(num < base);
+	assert(num < (unsigned)base);
 	
 	num += (snum * ipow(base, n));
 	n++;
