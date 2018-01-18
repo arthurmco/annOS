@@ -8,6 +8,7 @@
 #include <arch/x86/i8259.hpp>
 #include <arch/x86/IO.hpp>
 #include <libk/panic.h>
+#include <Log.hpp>
 
 using namespace annos::x86;
 
@@ -128,8 +129,21 @@ bool i8259::GetIRQMask(unsigned irqno)
  */
 void i8259::SendEOI(unsigned irqno)
 {
-    if (irqno >= 8)
-	out8(SlavePIC.command, 0x20);
+    // Get the ISR, so we can detect spurious IRQs
+    uint16_t isr = this->ReadISR();
+    
+    if (irqno >= 8) {
+	if (isr & (1 << irqno)) {
+	    out8(SlavePIC.command, 0x20);
+	} else {
+	    Log::Write(LogLevel::Warning, "i8259", "spurious IRQ on %d", irqno);
+	}
+    } else {
+	if ( (isr & (1 << irqno)) == 0) {
+	    Log::Write(LogLevel::Warning, "i8259", "spurious IRQ on %d", irqno);
+	    return;
+	}
+    }
 
     out8(MasterPIC.command, 0x20);
 }

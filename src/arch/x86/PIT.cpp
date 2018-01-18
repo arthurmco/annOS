@@ -22,6 +22,13 @@ void PIT::SetTimer(uint16_t hz)
     Log::Write(LogLevel::Info, "pit", "frequency set to %d Hz", hz);
 }
 
+void PIT::OnIRQ(IRQRegs* regs)
+{
+    (void)regs;
+    Timer::Tick();
+    Log::Write(LogLevel::Debug, "pit", "t: %d", ((uint32_t)Timer::Get()));
+}
+
 /** 
  *  Device initialization
  *  Sets the clock and the IRQ handler
@@ -29,13 +36,7 @@ void PIT::SetTimer(uint16_t hz)
 void PIT::Initialize()
 {
     this->SetTimer(1000);
-    IRQHandler::SetHandler(0, [](IRQRegs* r) {
-	    static unsigned i = 0;
-	    i++;
-
-	    if (i % 1000 == 0 && i > 0)
-		Log::Write(LogLevel::Debug, "pit", "1 second has passed");
-	});
+    Timer::Init();
 }
 
 /**

@@ -114,6 +114,7 @@ void kernel_main(BootStruct* bs) {
     
     ::x86::PIT p;
     p.Initialize();
+    ::x86::IRQHandler::SetHandler(0, &p);
     
     
     for (;;) {

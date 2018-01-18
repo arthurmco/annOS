@@ -67,25 +67,22 @@ void IRQHandler::Init(IDT* idt, i8259* irqcontrol)
 }
 
 /* MAX_IRQ_HANDLERS (probably 16) handlers for 16 IRQs */
-static fnIRQHandler irqHandlers[16][MAX_IRQ_HANDLERS] = {};
+static IIRQHandlerDevice* irqHandlers[16][MAX_IRQ_HANDLERS] = {};
 
 /**
  * IRQ dispatcher
  * Execute the fault handlers.
  */
 extern "C" void IRQDispatcher(IRQRegs* regs)
-{    
-    //kprintf("IRQ \033[1;36m%d\033[0m triggered\n", regs->irq_no);
-
+{
     size_t pos = 0;
     while (irqHandlers[regs->irq_no][pos]) {
-	irqHandlers[regs->irq_no][pos](regs);
+	irqHandlers[regs->irq_no][pos]->OnIRQ(regs);
 	pos++;
 
 	if (pos >= MAX_IRQ_HANDLERS)
 	    break;
     }
-	   
 
     _irq_control->SendEOI(regs->irq_no);
 }
@@ -94,7 +91,7 @@ extern "C" void IRQDispatcher(IRQRegs* regs)
  * Sets a new IRQ handler
  * @returns a index in the list of handlers
  */
-int IRQHandler::SetHandler(unsigned irqno, fnIRQHandler handler)
+int IRQHandler::SetHandler(unsigned irqno, IIRQHandlerDevice* h)
 {
     if (irqno >= 16)
 	panic("the IRQHandler only supports IRQ numbers 0 to 15");
@@ -120,10 +117,10 @@ int IRQHandler::SetHandler(unsigned irqno, fnIRQHandler handler)
     }
 
     Log::Write(LogLevel::Info, "irq-handler",
-	       "Set handler #%d to IRQ #%d @ 0x%08x",
-	       len, irqno, handler);
+	       "Set handler #%d to IRQ #%d to dev @ 0x%08x",
+	       len, irqno, h);
     
-    irqHandlers[irqno][len] = handler;
+    irqHandlers[irqno][len] = h;
     return int(len);
 }
 

@@ -28,11 +28,18 @@ namespace annos::x86 {
 	uint32_t eip, cs, eflags, esp, ss;
     };
 
-    /**
-     * Function pointer representing a IRQ handler
-     */
-    typedef void (*fnIRQHandler)(IRQRegs* regs);
     
+    /* Interface to be implemented for all devices that 
+       handler IRQs */
+    class IIRQHandlerDevice {
+    public:
+	/**
+	 * Event function to be called on each IRQ
+	 */
+	virtual void OnIRQ(IRQRegs* regs) = 0;
+    };
+
+
     /**
      * The fault handler class itself
      */
@@ -51,7 +58,7 @@ namespace annos::x86 {
 	 * Sets a new IRQ handler
 	 * @returns a index in the list of handlers
 	 */
-	static int SetHandler(unsigned irqno, fnIRQHandler handler);
+	static int SetHandler(unsigned irqno, IIRQHandlerDevice*);
 
 	/*
 	 * Removes an IRQ handler
