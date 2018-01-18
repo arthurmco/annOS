@@ -3,6 +3,7 @@
 #include <Log.hpp>
 #include <arch/x86/IO.hpp>
 #include <arch/x86/IDT.hpp>
+#include <arch/x86/PIT.hpp>
 #include <arch/x86/i8259.hpp>
 #include <arch/x86/FaultHandler.hpp>
 #include <arch/x86/IRQHandler.hpp>
@@ -109,7 +110,11 @@ void kernel_main(BootStruct* bs) {
 	    bif->boot_device);
     kprintf("\t -> Command line: \033[1m%s\033[0m\n",
 	    ((const char*)bif->cmdline));
-	    
+
+    
+    ::x86::PIT p;
+    p.Initialize();
+    
     
     for (;;) {
 	asm volatile("hlt");

@@ -75,7 +75,7 @@ static fnIRQHandler irqHandlers[16][MAX_IRQ_HANDLERS] = {};
  */
 extern "C" void IRQDispatcher(IRQRegs* regs)
 {    
-    kprintf("IRQ \033[1;36m%d\033[0m triggered\n", regs->irq_no);
+    //kprintf("IRQ \033[1;36m%d\033[0m triggered\n", regs->irq_no);
 
     size_t pos = 0;
     while (irqHandlers[regs->irq_no][pos]) {
@@ -104,12 +104,14 @@ int IRQHandler::SetHandler(unsigned irqno, fnIRQHandler handler)
     size_t len = 0;
     while (irqHandlers[irqno][len] != NULL) {
 	len++;
-	if (len == 1)
-	    _irq_control->SetIRQMask(irqno, false); // We have a handler, unmask
-	    
+
 	if (len >= MAX_IRQ_HANDLERS)
 	    break;
     }
+    if (len == 0)
+	_irq_control->SetIRQMask(irqno, false); // We have a handler, unmask
+	    
+
 
     if (len >= 16) {
 	// Handler for this IRQ is full
@@ -117,6 +119,10 @@ int IRQHandler::SetHandler(unsigned irqno, fnIRQHandler handler)
 	return -1;
     }
 
+    Log::Write(LogLevel::Info, "irq-handler",
+	       "Set handler #%d to IRQ #%d @ 0x%08x",
+	       len, irqno, handler);
+    
     irqHandlers[irqno][len] = handler;
     return int(len);
 }
