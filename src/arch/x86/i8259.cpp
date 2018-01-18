@@ -59,6 +59,8 @@ void i8259::Initialize()
     io_wait_busy();
     out8(SlavePIC.data, 1);
     io_wait_busy();
+
+    this->ClearAllIRQs();
 }
     
 
@@ -79,6 +81,15 @@ void i8259::Reset()
 
 }
 
+/**
+ * Clear the mask for all IRQs.
+ * This is only meant to be used on initialization
+ */
+void i8259::ClearAllIRQs()
+{
+    out8(MasterPIC.data, 0xff ^ 0x4); // only keep IRQ 2, for cascading
+    out8(SlavePIC.data, 0xff);
+}
 
 /**
  * Set/clear IRQ mask for a certain IRQ
@@ -121,4 +132,19 @@ void i8259::SendEOI(unsigned irqno)
 	out8(SlavePIC.command, 0x20);
 
     out8(MasterPIC.command, 0x20);
+}
+
+
+/**
+ * Read the Interrupt Service Register
+ * This is a register off all IRQs that the controller sent to the 
+ * processor
+ *
+ * This retrieves the register for both controllers
+ */
+uint16_t i8259::ReadISR()
+{
+    out8(MasterPIC.command, 0x0b);
+    out8(SlavePIC.command, 0x0b);
+    return (in8(SlavePIC.command) << 8) | in8(MasterPIC.command);
 }

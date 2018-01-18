@@ -12,6 +12,8 @@
 #include <libk/stdio.h>
 #include <libk/panic.h>
 
+#include <Log.hpp>
+
 using namespace annos::x86;
 
 /**
@@ -102,6 +104,9 @@ int IRQHandler::SetHandler(unsigned irqno, fnIRQHandler handler)
     size_t len = 0;
     while (irqHandlers[irqno][len] != NULL) {
 	len++;
+	if (len == 1)
+	    _irq_control->SetIRQMask(irqno, false); // We have a handler, unmask
+	    
 	if (len >= MAX_IRQ_HANDLERS)
 	    break;
     }
@@ -122,5 +127,16 @@ int IRQHandler::SetHandler(unsigned irqno, fnIRQHandler handler)
 void IRQHandler::RemoveHandler(unsigned irqno, int index)
 {
     irqHandlers[irqno][index] = NULL;
+
+    /* Check if we have no more handlers, so we can unmask it in the PIC */
+    unsigned i = 0;
+    while (irqHandlers[irqno][i] != NULL) {
+	i++;
+	if (i >= MAX_IRQ_HANDLERS)
+	    break;
+    }
+
+    if (i >= MAX_IRQ_HANDLERS)
+	_irq_control->SetIRQMask(irqno, true);
 }
 
