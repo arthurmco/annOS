@@ -33,8 +33,8 @@ void SerialLogConsole::WriteChar(char c)
 {
     int timeout=0;
     while ( (in8(this->portno+5) & 0x20) == 0 ) {
-	if ((timeout++) > 10) {
-	    kputs("timeout");
+	if ((timeout++) > 1000) {
+	    
 	    return;
 	}
     }
