@@ -95,7 +95,7 @@ void VGAConsole::WriteVGA(const char* str, BaseColors color)
 		    case '0': setcolor = BaseColors::Black; break;
 		    case '1': setcolor = BaseColors::Red; break;
 		    case '2': setcolor = BaseColors::Green; break;
-		    case '3': setcolor = BaseColors::Yellow; break;
+		    case '3': setcolor = BaseColors::Brown; break;
 		    case '4': setcolor = BaseColors::Blue; break;
 		    case '5': setcolor = BaseColors::Magenta; break;
 		    case '6': setcolor = BaseColors::Cyan; break;
