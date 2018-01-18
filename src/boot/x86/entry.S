@@ -25,6 +25,25 @@ stack_bottom:
 	.skip 32768
 stack_top:
 
+/** The kernel_main() function (for now) expects that we pass a pointer to a
+ *  struct. The struct will be declared where, along with its fields
+ */
+kboot_struct:
+multiboot_magic:
+	.skip 4 // The multiboot load magic number (0x2badb002)
+multiboot_ptr:
+	.skip 4 // Physical memory pointer to the multiboot boot info struct.
+
+// Fields below are not implemented
+	
+phys_pos_kernel_start:
+	.skip 4 // Physical address of kernel start
+phys_pos_kernel_end:	
+	.skip 4 // Physical address of kernel end
+phys_virt_offset:
+	.skip 4 // Offset of virtual address relative to the physical
+	        // will be 0xC000000
+
 // Entry point
 .section .text
 .global _start
@@ -32,6 +51,14 @@ stack_top:
 	
 _start:
 	mov $stack_top, %esp	// Sets the stack
+
+	push %ebx
+	mov $kboot_struct, %ebx // use ebx for addressing, it's made for this
+	pop %ecx
+	
+	mov %eax, (%ebx) // put the magic number
+	mov %ecx, 4(%ebx) // put the multiboot struct physical pointer
+	
 
 gdt_init:
 //Initialize GDT
@@ -48,7 +75,6 @@ gdt_init:
 	movw %ax, %ss
 	jmp main_init
 	
-// TODO: Initialize IDT
 // TODO: Initialize paging
 
 main_init:	
@@ -56,6 +82,9 @@ main_init:
 	movw $0x0f41, %cx
 	movw %cx, (%ebx)
 
+	mov $kboot_struct, %ebx // load the pointer.
+	push %ebx
+	
 	call kernel_main
 	
 	cli
