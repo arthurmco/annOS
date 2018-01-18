@@ -60,7 +60,11 @@ SerialLogConsole::SerialLogConsole()
     /* Clear the transmit and receive FIFOs, set FIFO threshold to 8 bytes
        and enable it
     */
-    out8(this->portno+2, 0x87); 
+    out8(this->portno+2, 0x87);
+    this->WriteString("\n\n \033[1m-[annOS]-\033[0m \n");
+    this->WriteString("Serial log console started: "
+		      "\033[38;5;74m9600\033[0m baud, "
+		      "\033[38;5;74m8n1\033[0m\n");
 }
 	
 /* Write function for VGA-compatible output */

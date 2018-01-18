@@ -26,7 +26,6 @@ void PIT::OnIRQ(IRQRegs* regs)
 {
     (void)regs;
     Timer::Tick();
-    Log::Write(LogLevel::Debug, "pit", "t: %d", ((uint32_t)Timer::Get()));
 }
 
 /** 
