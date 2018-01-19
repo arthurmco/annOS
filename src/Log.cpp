@@ -39,9 +39,9 @@ void Log::Write(LogLevel l, const char* tag, const char* fmt, ...)
     vsprintf(fstr, fmt, vl);
     va_end(vl);
 
-    char str[strlen(fstr) + strlen(tag) + 8] = " ";
+    char str[strlen(fstr) + strlen(tag) + 8] = "\033[1m";
     strcat(str, tag);
-    strcat(str, ": ");
+    strcat(str, "\033[0m: ");
     strcat(str, fstr);
     strcat(str, "\n");
 
