@@ -4,8 +4,6 @@
 using namespace annos;
 using namespace annos::x86;
 
-extern void kputs(const char*);
-
 /*
   Kernel serial logging console driver
 

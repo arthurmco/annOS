@@ -19,6 +19,7 @@ extern "C" void __cxa_pure_virtual()
     panic("called virtual function without body");
 }
 
+
 /**
  * Boot structure
  */
@@ -33,6 +34,18 @@ struct BootStruct {
      */
     uintptr_t multiboot_phys_ptr;
 } __attribute((packed));
+
+
+/* Memory map multiboot field */
+struct MultibootMmap {
+    uint32_t size;
+    struct {
+	uint64_t addr;
+	uint64_t len;
+	uint32_t type;
+	uint32_t size;
+    } map[];
+};
 
 /**
  * Multiboot Boot Information Format structure
@@ -103,14 +116,40 @@ void kernel_main(BootStruct* bs) {
 	    bs->magic, bs->multiboot_phys_ptr);
 
     MultibootBIF* bif = (MultibootBIF*)bs->multiboot_phys_ptr;
-    kprintf("\t -> Bootloader flags: \033[1m0x%08x\033[0m\n", bif->flags);
-    kprintf("\t -> Memory total: \033[1m%d kB\033[0m\n",
+    kprintf("\t-> Bootloader flags: \033[1m0x%08x\033[0m\n", bif->flags);
+    kprintf("\t-> Memory total: \033[1m%d kB\033[0m\n",
 	    bif->mem_lower+bif->mem_upper);
-    kprintf("\t -> Boot device: \033[1m %x \033[0m\n",
+    kprintf("\t-> Boot device: \033[1m %x \033[0m\n",
 	    bif->boot_device);
-    kprintf("\t -> Command line: \033[1m%s\033[0m\n",
+    kprintf("\t-> Command line: \033[1m%s\033[0m\n",
 	    ((const char*)bif->cmdline));
+    kprintf("\t-> \033[1m%d\033[0m boot modules, pointer at 0x%08x\n",
+	    bif->mods_count, bif->mods_addr);
+    kprintf("\t-> Memory map pointer: at \033[1m0x%08x\033[0m, with "
+	    "\033[1m%d\033[0m bytes\n",
+	    bif->mmap_addr, bif->mmap_length);
+	    
 
+    MultibootMmap* mb_mmap = (MultibootMmap*)bif->mmap_addr;
+    Log::Write(Info, "mmap", "mmap entries are %d bytes",
+	       mb_mmap->size);
+    
+    /* Entry count minus the initial size */
+    int entcount = (bif->mmap_length - sizeof(uint32_t)) / mb_mmap->size;
+    for (int i = 0; i < entcount; i++) {
+
+	static const char* strType[] = {"", "available", "reserved",
+					"ACPI", "ACPI NVS",
+					"badram"};
+					
+
+	auto mtype = mb_mmap->map[i].type;
+	Log::Write(Info, "mmap",
+		   "\t %d: start 0x%08x len 0x%08x type %d (%s)", i,
+		   (uint32_t)mb_mmap->map[i].addr,
+		   (uint32_t)mb_mmap->map[i].len,
+		   mtype, strType[(mtype > 5) ? 2 : mtype]);
+    }
     
     ::x86::PIT p;
     p.Initialize();
