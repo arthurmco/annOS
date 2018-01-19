@@ -9,7 +9,7 @@
 int memcmp(const void* s1, const void* s2, size_t len)
 {
     const char* cs1 = (const char*)s1;
-    const char* cs2 = (const char*)s1;
+    const char* cs2 = (const char*)s2;
     for (size_t i = 0; i < len; i++) {
 	if (cs1[i] != cs2[i]) {
 	    if (cs1[i] < cs2[i]) return -1;

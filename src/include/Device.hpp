@@ -30,6 +30,15 @@ namespace annos {
 	const char* GetTag();
 	const char* GetName();
 
+	/**
+	 * Device detection code 
+	 * Only detects if it's there, do not initialize it (or deinitialize
+	 * right after you detect, even if you found it)
+	 *
+	 * @returns true if detected, false if not
+	 */
+	virtual bool Detect() { return true; }
+	
 	/** 
 	 *  Implement device initialization here 
 	 */

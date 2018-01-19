@@ -7,6 +7,7 @@
 #include <arch/x86/i8259.hpp>
 #include <arch/x86/FaultHandler.hpp>
 #include <arch/x86/IRQHandler.hpp>
+#include <arch/x86/SMBIOS.hpp>
 
 #include <libk/stdio.h>
 #include <libk/stdlib.h>
@@ -154,7 +155,12 @@ void kernel_main(BootStruct* bs) {
     ::x86::PIT p;
     p.Initialize();
     ::x86::IRQHandler::SetHandler(0, &p);
-    
+
+    ::x86::SMBios b;
+    if (b.Detect()) {
+	kprintf(" ...smbios");
+	b.Initialize();
+    }
     
     for (;;) {
 	asm volatile("hlt");
