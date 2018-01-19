@@ -31,10 +31,9 @@ void SerialLogConsole::WriteString(const char* str)
 */    
 void SerialLogConsole::WriteChar(char c)
 {
-    int timeout=0;
+    volatile unsigned int timeout=0;
     while ( (in8(this->portno+5) & 0x20) == 0 ) {
-	if ((timeout++) > 1000) {
-	    
+	if ((timeout++) > 0xfffffff0) {
 	    return;
 	}
     }
