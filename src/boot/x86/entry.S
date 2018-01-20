@@ -33,17 +33,21 @@ multiboot_magic:
 	.skip 4 // The multiboot load magic number (0x2badb002)
 multiboot_ptr:
 	.skip 4 // Physical memory pointer to the multiboot boot info struct.
-
-// Fields below are not implemented
-	
 phys_pos_kernel_start:
 	.skip 4 // Physical address of kernel start
 phys_pos_kernel_end:	
 	.skip 4 // Physical address of kernel end
+
+// Fields below are not implemented
+	
 phys_virt_offset:
 	.skip 4 // Offset of virtual address relative to the physical
 	        // will be 0xC000000
 
+// Pointers to kernel start and end
+.extern _p_kernel_start
+.extern _p_kernel_end
+	
 // Entry point
 .section .text
 .global _start
@@ -58,7 +62,10 @@ _start:
 	
 	mov %eax, (%ebx) // put the magic number
 	mov %ecx, 4(%ebx) // put the multiboot struct physical pointer
-	
+	mov $_p_kernel_start, %eax
+	mov %eax, 8(%ebx)
+	mov $_p_kernel_end, %eax
+	mov %eax, 12(%ebx)
 
 gdt_init:
 //Initialize GDT

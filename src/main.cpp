@@ -34,6 +34,10 @@ struct BootStruct {
      * Physical memory pointer for the multiboot boot information structure 
      */
     uintptr_t multiboot_phys_ptr;
+
+    /* Kernel start and end physical addresses */
+    uintptr_t phys_kernel_start, phys_kernel_end;
+    
 } __attribute((packed));
 
 
@@ -96,6 +100,10 @@ void kernel_main(BootStruct* bs) {
 		   bs->magic);
 	panic("invalid boot magic number");
     }
+
+    kprintf("\n\n Kernel starts at 0x%x, ends at 0x%x\n\n",
+	    bs->phys_kernel_start, bs->phys_kernel_end);
+    kprintf("\033[1m\tStarting... \033[0m\n");
     
     ::x86::IDT idt;
     idt.Register();
