@@ -24,7 +24,8 @@ X86_ARCH = src/boot/x86/entry.S.o src/arch/x86/IO.cpp.o src/arch/x86/IDT.cpp.o \
 	   src/arch/x86/PIT.cpp.o src/arch/x86/SMBIOS.cpp.o
 
 KERNEL_COMMON= src/main.cpp.o src/VGAConsole.cpp.o src/Device.cpp.o \
-	       src/Log.cpp.o src/DebugConsole.cpp.o src/Timer.cpp.o
+	       src/Log.cpp.o src/DebugConsole.cpp.o src/Timer.cpp.o \
+	       src/PMM.cpp.o
 
 LIBK_COMMON= src/libk/stdlib.cpp.o src/libk/stdio.cpp.o \
              src/libk/stdio_write.cpp.o src/libk/panic.cpp.o

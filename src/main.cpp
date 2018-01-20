@@ -1,6 +1,7 @@
 #include <VGAConsole.hpp>
 #include <DebugConsole.hpp>
 #include <Log.hpp>
+#include <PMM.hpp>
 #include <arch/x86/IO.hpp>
 #include <arch/x86/IDT.hpp>
 #include <arch/x86/PIT.hpp>
@@ -142,23 +143,22 @@ void kernel_main(BootStruct* bs) {
     MultibootMmap* mb_mmap = (MultibootMmap*)bif->mmap_addr;
     Log::Write(Info, "mmap", "mmap entries are %d bytes",
 	       mb_mmap->size);
+
+    /* Create a PMM-compatible memory map, so we can add it in the PMM */
     
     /* Entry count minus the initial size */
     int entcount = (bif->mmap_length - sizeof(uint32_t)) / mb_mmap->size;
+    
+    MemoryMap mmap[entcount];
     for (int i = 0; i < entcount; i++) {
-
-	static const char* strType[] = {"", "available", "reserved",
-					"ACPI", "ACPI NVS",
-					"badram"};
-					
-
 	auto mtype = mb_mmap->map[i].type;
-	Log::Write(Info, "mmap",
-		   "\t %d: start 0x%08x len 0x%08x type %d (%s)", i,
-		   (uint32_t)mb_mmap->map[i].addr,
-		   (uint32_t)mb_mmap->map[i].len,
-		   mtype, strType[(mtype > 5) ? 2 : mtype]);
+	mmap[i] = {.start = (uintptr_t)mb_mmap->map[i].addr,
+		   .len = (size_t)mb_mmap->map[i].len,
+		   .type = (int)mtype};
     }
+
+    PMM pmm = PMM(bs->phys_kernel_start, (void*)bs->phys_kernel_end,
+		  mmap, entcount);
     
     ::x86::PIT p;
     p.Initialize();
