@@ -32,6 +32,7 @@
 	
 // Macro to insert an exception that doesn't push anything to the stack
 .macro fault_nocode faultnum
+    .align 16
     fault\faultnum\() :
 	
     push $0x0       //  dummy error code
@@ -70,7 +71,8 @@ FAULT_CODE 14
  */
 .extern FaultDispatcher
 
-//  Interrupt pushes eip, cs, eflags, user esp and ss automatically
+	//  Interrupt pushes eip, cs, eflags, user esp and ss automatically
+.align 16
 _fault_asm_common:
 	pushal  //  Push registers (edi,esi,ebp,esp.ebx,edx.ecx.eax)
 	push %ds //  Push data segments

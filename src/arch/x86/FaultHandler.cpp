@@ -60,11 +60,20 @@ static bool fnPageFaultHandler(FaultRegs* regs)
     asm volatile("mov %%cr3, %%eax" : "=a"(cr3));
 
     kprintf("\t \033[1mFUCK.\033[0m\n\t");
-    Log::Write(Fatal, "", "unrecoverable page fault at address 0x%08x\n"
-	       "\t flags: %02x \033[1m", cr2, regs->error_code);
+
+    if (cr2 == 0x0) {
+	Log::Write(Fatal, "", "page fault: null pointer dereference\n"
+		   "\t flags: %02x \033[1m", cr2, regs->error_code);
 	
-    kprintf("\t \033[41;37;1mpanic:\033[0m unrecoverable page fault at address 0x%08x\n"
+	kprintf("\t \033[41;37;1mpanic:\033[0m page fault: null pointer dereferenced\n"
 	    "\t flags: \033[1m", cr2);
+    } else {
+	Log::Write(Fatal, "", "unrecoverable page fault at address 0x%08x\n"
+		   "\t flags: %02x \033[1m", cr2, regs->error_code);
+	
+	kprintf("\t \033[41;37;1mpanic:\033[0m unrecoverable page fault at address 0x%08x\n"
+	    "\t flags: \033[1m", cr2);
+    }
 
     // Decode type
     if (regs->error_code & 0x1)
@@ -77,7 +86,7 @@ static bool fnPageFaultHandler(FaultRegs* regs)
     else
 	kprintf(" read");
 
-    if (regs->error_code & 0x3)
+    if (regs->error_code & 0x4)
 	kprintf(" user");
     else
 	kprintf(" kernel");
