@@ -38,6 +38,12 @@ struct BootStruct {
 
     /* Kernel start and end physical addresses */
     uintptr_t phys_kernel_start, phys_kernel_end;
+
+    /* Virtual-physical address difference */
+    uintptr_t phys_virt_offset;
+
+    /* Physical address of the cr3 page table */
+    uintptr_t phys_cr3_addr;
     
 } __attribute((packed));
 
@@ -101,10 +107,12 @@ void kernel_main(BootStruct* bs) {
 		   bs->magic);
 	panic("invalid boot magic number");
     }
-
-    kprintf("\n\n Kernel starts at 0x%x, ends at 0x%x\n\n",
+    
+    kprintf("\n\n Kernel starts at 0x%x, ends at 0x%x\n",
 	    bs->phys_kernel_start, bs->phys_kernel_end);
-    kprintf("\033[1m\tStarting... \033[0m\n");
+    kprintf("Page base directory is at 0x%x\n", bs->phys_cr3_addr);
+    
+    kprintf("\033[1m\tStarting... \033[0m ");
     
     ::x86::IDT idt;
     idt.Register();
@@ -159,6 +167,9 @@ void kernel_main(BootStruct* bs) {
 
     PMM pmm = PMM(bs->phys_kernel_start, (void*)bs->phys_kernel_end,
 		  mmap, entcount);
+
+    
+    pmm.AllocatePhysical(130);
     
     ::x86::PIT p;
     p.Initialize();

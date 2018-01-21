@@ -37,16 +37,26 @@ phys_pos_kernel_start:
 	.skip 4 // Physical address of kernel start
 phys_pos_kernel_end:	
 	.skip 4 // Physical address of kernel end
-
-// Fields below are not implemented
-	
 phys_virt_offset:
-	.skip 4 // Offset of virtual address relative to the physical
-	        // will be 0xC000000
+ 	.skip 4 // Offset of virtual address relative to the physical			           // will be 0xC000000
+phys_cr3_addr:	
+	.skip 4 // Physical address of the starting page directory
 
 // Pointers to kernel start and end
 .extern _p_kernel_start
 .extern _p_kernel_end
+
+.align 4096 	// Align to one page
+/*
+	This is the page directory used on boot.
+	It will not have much entries, but need to be enough for the kernel.
+ */
+BootPageDirectory:
+	.skip 4096
+BootPageTableLow:	
+	.skip 4096
+BootPageTableHigh:	
+	.skip 4096
 	
 // Entry point
 .section .text
@@ -67,6 +77,51 @@ _start:
 	mov $_p_kernel_end, %eax
 	mov %eax, 12(%ebx)
 
+_fill_boot_page_dir:
+	mov $BootPageDirectory, %ebx // EBX stores our Boot Page Directory
+	
+	mov $0x03, %eax // Create the low memory (0x0 -> 0x3fffff) page directory
+			// It's a present and RW directory. 
+	orl $BootPageTableLow, %eax
+	mov %eax, 0(%ebx)
+
+	mov $0x03, %eax // Create the high memory (0xc0000000 -> 0xc03fffff) page directory
+			// It's a present and RW directory. 
+	orl $BootPageTableHigh, %eax
+	mov %eax, 0xc00(%ebx) // virtual 0xc0000000
+	
+_fill_boot_page_tables:	
+	mov $BootPageTableLow, %edi // EDI stores the low table
+	mov $BootPageTableHigh, %esi // ESI stores the high table
+
+	mov $0, %ecx
+	
+	__fill:
+	mov %ecx, %edx
+	shl $12, %edx // 1 << 12 = 4096, the size of a page
+
+	orl $3, %edx // Present and RW page.
+
+	mov %edx, (%esi, %ecx, 4) // Put the physical address at the correct index
+	mov %edx, (%edi, %ecx, 4)
+	
+	add $1, %ecx
+	cmp $0x400, %ecx 	// We have only 1024 entries
+	jl __fill
+
+// Put our cr3 in the structure and enable paging
+	mov $kboot_struct, %ebx
+	mov $BootPageDirectory, %eax
+	
+	mov %eax, 20(%ebx)
+	mov %eax, %cr3
+	mov %cr0, %eax
+	orl $0x80000000, %eax
+	mov %eax, %cr0
+
+// Then, in our VMM::Init, we destroy the low memory page tables.
+	jmp gdt_init
+	hlt
 gdt_init:
 //Initialize GDT
 	mov $gdt_descriptor, %ebx
@@ -81,8 +136,6 @@ gdt_init:
 	movw %ax, %gs
 	movw %ax, %ss
 	jmp main_init
-	
-// TODO: Initialize paging
 
 main_init:	
 	movl $0xb8004, %ebx
@@ -101,7 +154,7 @@ _end:
 
 .align 16
 gdt_descriptor:
-	.word (gdt_tables_end - gdt_tables) - 1
+	.word (gdt_tables_end - gdt_tables) - 1 ;
 	.long gdt_tables
 
 .align 16	
