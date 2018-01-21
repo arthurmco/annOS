@@ -10,6 +10,8 @@
 .set FLAGS,    ALIGN | MEMINFO  /* Multiboot 'flag' field */
 .set MAGIC,    0x1BADB002       /* 'magic number to bootloader find the header */
 .set CHECKSUM, -(MAGIC + FLAGS) /* checksum of above, to prove we are multiboot */
+
+.set KERNEL_VIRT_OFFSET, 0xc0000000
 	
 .section .multiboot
 	.align 4
@@ -64,39 +66,39 @@ BootPageTableHigh:
 .type _start, @function
 	
 _start:
-	mov $stack_top, %esp	// Sets the stack
+	mov $(stack_top - KERNEL_VIRT_OFFSET), %esp	// Sets the stack
 
 	push %ebx
-	mov $kboot_struct, %ebx // use ebx for addressing, it's made for this
+	mov $(kboot_struct - KERNEL_VIRT_OFFSET), %ebx // use ebx for addressing, it's made for this
 	pop %ecx
 	
 	mov %eax, (%ebx) // put the magic number
 	mov %ecx, 4(%ebx) // put the multiboot struct physical pointer
-	mov $_p_kernel_start, %eax
+	mov $(_p_kernel_start - KERNEL_VIRT_OFFSET), %eax
 	mov %eax, 8(%ebx)
-	mov $_p_kernel_end, %eax
+	mov $(_p_kernel_end  - KERNEL_VIRT_OFFSET), %eax
 	mov %eax, 12(%ebx)
 
 _fill_boot_page_dir:
-	mov $BootPageDirectory, %ebx // EBX stores our Boot Page Directory
+	mov $(BootPageDirectory - KERNEL_VIRT_OFFSET), %ebx // EBX stores our Boot Page Directory
 	
 	mov $0x03, %eax // Create the low memory (0x0 -> 0x3fffff) page directory
 			// It's a present and RW directory. 
-	orl $BootPageTableLow, %eax
+	orl $(BootPageTableLow - KERNEL_VIRT_OFFSET), %eax
 	mov %eax, 0(%ebx)
 
 	mov $0x03, %eax // Create the high memory (0xc0000000 -> 0xc03fffff) page directory
 			// It's a present and RW directory. 
-	orl $BootPageTableHigh, %eax
+	orl $(BootPageTableHigh - KERNEL_VIRT_OFFSET), %eax
 	mov %eax, 0xc00(%ebx) // virtual 0xc0000000
 	
 _fill_boot_page_tables:	
-	mov $BootPageTableLow, %edi // EDI stores the low table
-	mov $BootPageTableHigh, %esi // ESI stores the high table
+	mov $(BootPageTableLow - KERNEL_VIRT_OFFSET), %edi // EDI stores the low table
+	mov $(BootPageTableHigh - KERNEL_VIRT_OFFSET), %esi // ESI stores the high table
 
 	mov $0, %ecx
 	
-	__fill:
+1:	
 	mov %ecx, %edx
 	shl $12, %edx // 1 << 12 = 4096, the size of a page
 
@@ -107,23 +109,24 @@ _fill_boot_page_tables:
 	
 	add $1, %ecx
 	cmp $0x400, %ecx 	// We have only 1024 entries
-	jl __fill
+	jl 1b
 
 // Put our cr3 in the structure and enable paging
-	mov $kboot_struct, %ebx
-	mov $BootPageDirectory, %eax
+	mov $(kboot_struct - KERNEL_VIRT_OFFSET), %ebx
+	mov $(BootPageDirectory - KERNEL_VIRT_OFFSET), %eax
 	
 	mov %eax, 20(%ebx)
 	mov %eax, %cr3
 	mov %cr0, %eax
 	orl $0x80000000, %eax
 	mov %eax, %cr0
-
 // Then, in our VMM::Init, we destroy the low memory page tables.
 	jmp gdt_init
 	hlt
 gdt_init:
-//Initialize GDT
+	mov $stack_top, %esp	// Sets the stack
+	
+	//Initialize GDT
 	mov $gdt_descriptor, %ebx
 	lgdt (%ebx)
 	jmp $0x08, $.gdt_reload

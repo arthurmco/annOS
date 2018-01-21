@@ -5,7 +5,7 @@ CXX=/usr/local/gcc-7.2.0/bin/i686-elf-g++
 AS=/usr/local/gcc-7.2.0/bin/i686-elf-as
 QEMU=qemu-system-i386
 
-CXXFLAGS= -std=gnu++14 -ffreestanding -nostdlib -Wall -m32 -fno-exceptions -fno-rtti
+override CXXFLAGS+= -std=gnu++14 -ffreestanding -nostdlib -Wall -m32 -fno-exceptions -fno-rtti
 CXXINCLUDES= -I$(CURDIR)/src/include
 LDFLAGS=-lgcc -g
 
