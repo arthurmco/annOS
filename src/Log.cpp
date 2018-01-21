@@ -50,7 +50,7 @@ void Log::Write(LogLevel l, const char* tag, const char* fmt, ...)
 
     if (l >= LogLevel::Fatal)
 	kputs("A fatal error occurred: \n"); // You should panic on fatals
-    if (l >= LogLevel::Warning)
+    else if (l >= LogLevel::Warning)
 	kputs(str); // if > warning, print to the screen too
 }
 

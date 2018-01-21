@@ -169,9 +169,6 @@ void kernel_main(BootStruct* bs) {
 		  mmap, entcount);
 
     
-    pmm.AllocatePhysical(130);
-    pmm.AllocatePhysical(10, MMIO);
-    
     ::x86::PIT p;
     p.Initialize();
     ::x86::IRQHandler::SetHandler(0, &p);
@@ -182,6 +179,9 @@ void kernel_main(BootStruct* bs) {
 	kprintf(" ...smbios");
 	b.Initialize();
     }
+
+    uintptr_t* a = (uintptr_t*)0x400000;
+    *a = 1234;
     
     for (;;) {
 	asm volatile("hlt");

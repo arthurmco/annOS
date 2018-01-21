@@ -59,10 +59,13 @@ static bool fnPageFaultHandler(FaultRegs* regs)
     asm volatile("mov %%cr2, %%eax" : "=a"(cr2));
     asm volatile("mov %%cr3, %%eax" : "=a"(cr3));
 
-    kprintf("\t \033[1mFUCK.\033[0m\n");
+    kprintf("\t \033[1mFUCK.\033[0m\n\t");
+    Log::Write(Fatal, "", "unrecoverable page fault at address 0x%08x\n"
+	       "\t flags: %02x \033[1m", cr2, regs->error_code);
+	
     kprintf("\t \033[41;37;1mpanic:\033[0m unrecoverable page fault at address 0x%08x\n"
 	    "\t flags: \033[1m", cr2);
-    
+
     // Decode type
     if (regs->error_code & 0x1)
 	kprintf(" protection");
@@ -129,12 +132,13 @@ extern "C" void FaultDispatcher(FaultRegs* regs)
     if (r)
 	return;
     
-    kprintf("\n\n");
-    
-    kprintf("\t \033[41;37;1mpanic:\033[0m fatal exception #%d (%s), code %08x\n", regs->int_no,
-	    exceptionStr[regs->int_no], regs->error_code);
+    kprintf("\n\n\t");
 
+    Log::Write(Fatal, "", "\t fatal exception #%d (%s), code %08x\n",
+	    regs->int_no, exceptionStr[regs->int_no], regs->error_code);
 
+    kprintf("\t \033[41;37;1mpanic:\033[0m fatal exception #%d (%s), code %08x\n",
+	    regs->int_no, exceptionStr[regs->int_no], regs->error_code);
     
     kprintf("\t\t \033[1meax:\033[0m %08x\t \033[1mebx:\033[0m %08x"
 	    "\t \033[1mecx:\033[0m %08x\t \033[1medx\033[0m: %08x\n",
