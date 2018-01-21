@@ -61,8 +61,7 @@ PMM::PMM(uintptr_t kernel_start, void* pmm_pool_start,
     this->_mmap_count = mmap_count;
     if (this->MapPages(kernel_start, pmm_page_count) == ((uint32_t)-1)) {
 	Log::Write(Error, "pmm", "no memory to create the tables");
-	panic("pmm: no sufficient memory to even create the tables!");
-	
+	panic("pmm: no sufficient memory to even create the tables!");	
     }
 }
 
@@ -92,13 +91,19 @@ phys_t PMM::AllocatePhysical(size_t n)
 	PMMZone* zone = &_mmap[i];
 	/* Advance the actual page until we find sufficient free pages */
 
-	assert(zone->first_free_addr >= zone->start);
+	(zone->first_free_addr >= zone->start);
 	unsigned page_offset = (zone->first_free_addr - zone->start) / PHYS_PAGE_SIZE;
 
+	if ((page_offset+n) >= zone->pagecount) {
+	    Log::Write(Warning, "pmm", "AllocatePhysical: "
+		       "exhausted mmap zone #%d", i);
+	    continue;
+	}
+	
 	while (!this->CheckIfPagesFree(zone->alloc_bitmap, page_offset, n)) {
 	    page_offset++;
 
-	    if (page_offset >= zone->pagecount) {
+	    if ((page_offset+n) >= zone->pagecount) {
 		Log::Write(Warning, "pmm", "AllocatePhysical: "
 			   "exhausted mmap zone #%d", i);
 		continue;
