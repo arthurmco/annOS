@@ -18,7 +18,8 @@ namespace annos {
 	const unsigned _width = 80;
 	const unsigned _height = 25;
 
-	void WriteChar(const char c, BaseColors color);
+	void WriteChar(const char c, BaseColors color,
+		       BaseColors bgcolor = BaseColors::Black);
 
 	void Scroll();
 	

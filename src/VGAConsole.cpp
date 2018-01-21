@@ -33,7 +33,8 @@ void VGAConsole::Scroll()
     }
 }
 
-void VGAConsole::WriteChar(const char c, BaseColors fgcolor)
+void VGAConsole::WriteChar(const char c, BaseColors fgcolor,
+			   BaseColors bgcolor)
 {
     if (c == '\n') {
 	_xPos = 0;
@@ -47,7 +48,7 @@ void VGAConsole::WriteChar(const char c, BaseColors fgcolor)
 	}
 	
     } else {
-	uint8_t color = (uint8_t)fgcolor;
+	uint8_t color = (uint8_t)fgcolor | ((uint8_t)bgcolor << 4);
 	uint16_t data = (uint16_t)c | ((uint16_t)color << 8);
 	_framebuffer[_yPos * _width + _xPos] = data;
 	_xPos++;
@@ -69,6 +70,7 @@ void VGAConsole::WriteChar(const char c, BaseColors fgcolor)
 void VGAConsole::WriteVGA(const char* str, BaseColors color)
 {
     BaseColors setcolor = color;
+    BaseColors backcolor = BaseColors::Black;
     while (*str != '\0') {
 
 	// Process escape sequence
@@ -79,6 +81,7 @@ void VGAConsole::WriteVGA(const char* str, BaseColors color)
 		switch (*str++) {
 		case '0': // Return to normal
 		    setcolor = color;
+		    backcolor = BaseColors::Black;
 		    break;
 			
 		case '1': // Bold
@@ -108,6 +111,22 @@ void VGAConsole::WriteVGA(const char* str, BaseColors color)
 		    }
 		}
 		break;
+
+		case '4': // Set background
+		{
+		    switch (*str++) {
+		    case '0': backcolor = BaseColors::Black; break;
+		    case '1': backcolor = BaseColors::Red; break;
+		    case '2': backcolor = BaseColors::Green; break;
+		    case '3': backcolor = BaseColors::Brown; break;
+		    case '4': backcolor = BaseColors::Blue; break;
+		    case '5': backcolor = BaseColors::Magenta; break;
+		    case '6': backcolor = BaseColors::Cyan; break;
+		    case '7': backcolor = BaseColors::LightGrey; break;
+			
+		    }
+		}
+		break;
 		    
 		case 'm': //End
 		    escape_in = false;
@@ -118,7 +137,7 @@ void VGAConsole::WriteVGA(const char* str, BaseColors color)
 	    }
 	}
 	    
-	this->WriteChar(*str, setcolor);
+	this->WriteChar(*str, setcolor, backcolor);
 	str++;
     }
     update_cursor(_xPos, _yPos, _width);
