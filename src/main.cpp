@@ -5,6 +5,7 @@
 #include <arch/x86/IO.hpp>
 #include <arch/x86/IDT.hpp>
 #include <arch/x86/PIT.hpp>
+#include <arch/x86/VMM.hpp>
 #include <arch/x86/i8259.hpp>
 #include <arch/x86/FaultHandler.hpp>
 #include <arch/x86/IRQHandler.hpp>
@@ -168,6 +169,10 @@ void kernel_main(BootStruct* bs) {
     PMM pmm = PMM(bs->phys_kernel_start, (void*)bs->phys_kernel_end,
 		  mmap, entcount);
 
+
+    ::x86::VMM::Init(&pmm, bs->phys_cr3_addr,
+		     bs->phys_kernel_start + bs->phys_virt_offset,
+		     bs->phys_kernel_end + bs->phys_virt_offset);
     
     ::x86::PIT p;
     p.Initialize();
@@ -180,8 +185,6 @@ void kernel_main(BootStruct* bs) {
 	b.Initialize();
     }
 
-    uintptr_t* a = (uintptr_t*)0x400000;
-    *a = 1234;
     
     for (;;) {
 	asm volatile("hlt");

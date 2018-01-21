@@ -121,11 +121,15 @@ _fill_boot_page_tables:
 	orl $0x80000000, %eax
 	mov %eax, %cr0
 // Then, in our VMM::Init, we destroy the low memory page tables.
-	jmp gdt_init
+	jmp kernel_page_init_finalize 
 	hlt
-gdt_init:
+
+kernel_page_init_finalize:	
 	mov $stack_top, %esp	// Sets the stack
+	mov $0xc0000000, %eax
+	mov %eax, 16(%ebx)
 	
+gdt_init:
 	//Initialize GDT
 	mov $gdt_descriptor, %ebx
 	lgdt (%ebx)

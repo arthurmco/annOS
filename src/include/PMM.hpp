@@ -7,8 +7,7 @@
  */
 
 /**
- * TODO: Allocation flags, for each one of the memory areas
- *       The CheckPages() method.
+ * TODO: The CheckPages() method.
  *       Detect overlapping zones, alert the user and do something sane
  *       Merge contiguous zones with the same type
  */
