@@ -28,15 +28,35 @@ PMM::PMM(uintptr_t kernel_start, void* pmm_pool_start,
     this->_mmap = (PMMZone*)kernel_end_malloc(&kend_addr,
 					      sizeof(PMMZone)*mmap_count);
 
-    Log::Write(Info, "pmm", "Memory map (as received by the firmware)");
+    Log::Write(Info, "pmm", "Memory map:");
     for (size_t i = 0; i < mmap_count; i++) {
 	auto pagecount = (mmap_addr[i].len / PHYS_PAGE_SIZE);
+	if(mmap_addr[i].len > 0 && pagecount == 0)
+	    pagecount = 1; // pad...
 	
 	this->_mmap[i].start = mmap_addr[i].start;
 	this->_mmap[i].first_free_addr = mmap_addr[i].start;
 	this->_mmap[i].pagecount = pagecount;
-	this->_mmap[i].type = mmap_addr[i].type;
 
+	unsigned int type = mmap_addr[i].type;
+	this->_mmap[i].type = 0;
+	
+	switch (type) {
+	case 1:
+	    if (mmap_addr[i].start + mmap_addr[i].len < 0x100000)
+		this->_mmap[i].type += PMMZoneType::LowMemory;
+	    else
+		this->_mmap[i].type += PMMZoneType::Normal;
+	    break;
+		
+	default: //Better not risking
+	    if (mmap_addr[i].start + mmap_addr[i].len < 0x100000)
+		this->_mmap[i].type += PMMZoneType::LowMemory;
+	    
+	    this->_mmap[i].type += PMMZoneType::MMIO;
+	    break;
+	}
+	
 	// Allocate the zones. size of zones = (pagecount/8)+1
 	// +1 is because of rounding.
 	this->_mmap[i].alloc_bitmap = (char*)
@@ -48,7 +68,7 @@ PMM::PMM(uintptr_t kernel_start, void* pmm_pool_start,
 	Log::Write(Info, "pmm",
 		   "\t%d: start 0x%08x, type %02x, using %d phys pages, "
 		   "bitmap at 0x%08x",
-		   i+1, this->_mmap[i].start, this->_mmap[i].type, 
+		   i+1, this->_mmap[i].start, this->_mmap[i].type,
 		   this->_mmap[i].pagecount,
 		   (uintptr_t)this->_mmap[i].alloc_bitmap);
     }
@@ -74,9 +94,13 @@ PMM::PMM(uintptr_t kernel_start, void* pmm_pool_start,
  * @returns phys_t if it succeeds
  * It will panic if it don't, so no worries :v
  */
-phys_t PMM::AllocatePhysical(size_t n)
+phys_t PMM::AllocatePhysical(size_t n, PMMZoneType type)
 {
-    auto addr_type = 1;
+    auto addr_type = (unsigned)type;
+
+    if (addr_type & PMMZoneType::MMIO) {
+	panic("can't allocate MMIO addresses, they're supposed to be mapped!\n");
+    }
 
     // Check for the first non-full memory zone
     for (unsigned i = 0; i < this->_mmap_count; i++) {

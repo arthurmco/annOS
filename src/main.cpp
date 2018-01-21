@@ -170,13 +170,12 @@ void kernel_main(BootStruct* bs) {
 
     
     pmm.AllocatePhysical(130);
+    pmm.AllocatePhysical(10, MMIO);
     
     ::x86::PIT p;
     p.Initialize();
     ::x86::IRQHandler::SetHandler(0, &p);
 
-    uintptr_t* a = (uintptr_t*)0x500000;
-    *a = 0x4222;
 
     ::x86::SMBios b;
     if (b.Detect()) {

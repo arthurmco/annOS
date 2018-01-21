@@ -29,6 +29,37 @@ struct MemoryMap {
 
 typedef uintptr_t phys_t;
 
+enum PMMZoneType
+{
+    
+    /**
+     * A common, normal, nothing special zone
+     */
+    Normal = 1,
+
+    /**
+     * MMIO-reserved zones
+     * They can't be allocated (via AllocatePhysical(), just mapped
+     */
+    MMIO = 2,
+
+    /**
+     * Low-memory zones
+     * Used for devices that can't allocate more than 1MB
+     * (This might be rarely used outside of x86)
+     */
+    LowMemory = 4,
+
+    /**
+     * 64-bit zones
+     * Only effective in 64-bit architecture (that this kernel doesn't support)
+     * Any zone that starts and ends in an address above 0xffffffff (4 GB) is 
+     * a 64-bit zone
+     */
+    Zone64Bit = 8,
+    
+};
+    
 /**
  * Physical memory manager zone
  * A zone is a range of contiguous pages with something in common
@@ -101,7 +132,8 @@ public:
      * @returns phys_t if it succeeds
      * It will panic if it don't, so no worries :v
      */
-    phys_t AllocatePhysical(size_t n = 1);
+    phys_t AllocatePhysical(size_t n = 1,
+			    PMMZoneType type = PMMZoneType::Normal);
 
     /**
      * Check if you can allocate 'n' pages starting from the first free address
