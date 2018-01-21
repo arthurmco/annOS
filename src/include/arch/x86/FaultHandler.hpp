@@ -36,6 +36,8 @@ namespace annos::x86 {
 	MachineCheck,
 	SIMDFPE,
 	// Others reserved or not implemented.
+
+	FaultNum
     };
     
     /**
@@ -50,8 +52,9 @@ namespace annos::x86 {
 
     /**
      * Function pointer representing a fault handler
+     * Return true if it solved the fault, false if it don't.
      */
-    typedef void (*fnFaultHandler)(FaultRegs* regs);
+    typedef bool (*fnFaultHandler)(FaultRegs* regs);
     
     /**
      * The fault handler class itself
@@ -67,7 +70,7 @@ namespace annos::x86 {
 	 */
 	static void Init(IDT* idt);
 
-	static void SetHandler(unsigned faultno, void* handler);
+	static void SetHandler(unsigned faultno, fnFaultHandler handler);
     };
 
 }

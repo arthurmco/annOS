@@ -175,6 +175,9 @@ void kernel_main(BootStruct* bs) {
     p.Initialize();
     ::x86::IRQHandler::SetHandler(0, &p);
 
+    uintptr_t* a = (uintptr_t*)0x500000;
+    *a = 0x4222;
+
     ::x86::SMBios b;
     if (b.Detect()) {
 	kprintf(" ...smbios");
