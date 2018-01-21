@@ -15,7 +15,8 @@ namespace annos {
 	Notice, 
 	Info,    // Things you want to show that happened
 	Warning,
-	Error
+	Error,
+	Fatal,
     };
 
     class Log {
