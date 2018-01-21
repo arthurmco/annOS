@@ -1,6 +1,7 @@
 #include <PMM.hpp>
 #include <Log.hpp>
 #include <libk/panic.h>
+#include <libk/stdlib.h>
 
 using namespace annos;
 
@@ -41,6 +42,8 @@ PMM::PMM(uintptr_t kernel_start, void* pmm_pool_start,
 	this->_mmap[i].alloc_bitmap = (char*)
 	    kernel_end_malloc(&kend_addr, (pagecount/8)+1);
 
+	// Clean the memory!
+	memset(this->_mmap[i].alloc_bitmap, 0, (pagecount/8)+1);
 	
 	Log::Write(Info, "pmm",
 		   "\t%d: start 0x%08x, type %02x, using %d phys pages, "
@@ -119,6 +122,7 @@ phys_t PMM::AllocatePhysical(size_t n)
 	return naddr;		
     }
 
+    Log::Write(Fatal, "pmm", "AllocatePhysical: phys memory exhausted, no suitable zones");
     panic("pmm: AllocatePhysical: phys memory exhausted, no suitable zones");
     return 0;
     
