@@ -122,7 +122,7 @@ public:
  * @param mmap_addr Pointer to the memory map, as returned by the loader
  * @param mmap_count Count of items in the memory map
  */
-    PMM(uintptr_t kernel_start, void* pmm_pool_start,
+    PMM(uintptr_t kernel_start, uintptr_t virt_offset, void* pmm_pool_start,
 	MemoryMap* mmap_addr, size_t mmap_count);
 
     /**

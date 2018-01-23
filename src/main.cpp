@@ -166,7 +166,8 @@ void kernel_main(BootStruct* bs) {
 		   .type = (int)mtype};
     }
 
-    PMM pmm = PMM(bs->phys_kernel_start, (void*)bs->phys_kernel_end,
+    PMM pmm = PMM(bs->phys_kernel_start, bs->phys_virt_offset,
+		  (void*)(bs->phys_kernel_end + bs->phys_virt_offset),
 		  mmap, entcount);
 
 

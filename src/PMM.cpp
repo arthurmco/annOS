@@ -12,7 +12,7 @@ using namespace annos;
  * @param mmap_addr Pointer to the memory map, as returned by the loader
  * @param mmap_count Count of items in the memory map
  */
-PMM::PMM(uintptr_t kernel_start, void* pmm_pool_start,
+PMM::PMM(uintptr_t kernel_start, uintptr_t virt_offset, void* pmm_pool_start,
 	 MemoryMap* mmap_addr, size_t mmap_count)
 {
     uintptr_t kend_addr = (uintptr_t)pmm_pool_start;
@@ -77,7 +77,7 @@ PMM::PMM(uintptr_t kernel_start, void* pmm_pool_start,
 	       kend_addr, (kend_addr - (phys_t)pmm_pool_start));
 
     Log::Write(Debug, "pmm", "mapping the addresses used until now");
-    unsigned pmm_page_count = 1 + ((kend_addr - kernel_start) / PHYS_PAGE_SIZE);
+    unsigned pmm_page_count = 1 + ((kend_addr - (kernel_start + virt_offset)) / PHYS_PAGE_SIZE);
 
     Log::Write(Debug, "pmm", "mapping %d pages for it", pmm_page_count);
 
