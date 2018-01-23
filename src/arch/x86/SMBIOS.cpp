@@ -2,6 +2,7 @@
 #include <libk/stdio.h> // TODO: move strlen it to string.h
 #include <libk/stdlib.h>
 #include <libk/panic.h>
+#include <arch/x86/VMM.hpp>
 #include <Log.hpp>
 
 using namespace annos;
@@ -30,24 +31,26 @@ bool SMBios::Detect()
        0xf0000 to 0xfffff.
     */
 
-    uintptr_t smbios_addr = 0xf0000;
+    uintptr_t smbios_addr = 0xc00f0000;
     const char* entry_magic = "_SM_";
     const char* interm_magic = "_DMI_";
 
-    while (smbios_addr < 0x100000) {
+    while (smbios_addr < 0xc0100000) {
 	
 	if (!memcmp(entry_magic, (void*)smbios_addr, 4)) {
 	    if (!memcmp(interm_magic, (void*)(smbios_addr+0x10), 5)) {
 
 		if (!CheckIfChecksumValid((SMBiosEntry*) smbios_addr)) {
 		    smbios_addr += 0x10;
+		    // TODO: Unmap
 		    continue;
 		}
 
+		smbios_addr -=  0xc0000000;
 		Log::Write(Info, "smbios", "SMBIOS entry point found at 0x%x",
 			   smbios_addr);
-		
-		this->_smbios_entry_addr = smbios_addr;
+
+		this->_smbios_entry_addr = smbios_addr + 0xc0000000;
 		return true;
 	    }
 	}
@@ -242,7 +245,14 @@ void SMBios::Initialize()
 	       sm_entry->smbios_struct_count);
 
 
-    uintptr_t smbios_ptr = sm_entry->smbios_struct_addr;
+    /* Map 2 pages for guarding agains the smbios_struct_addr being near the end
+     * of a page. 
+     *   The MapPhysicalAddress starts mapping in the start, so you wouldn't even
+     *   use a page properly before it ends 
+     */
+    uintptr_t smbios_ptr =  VMM::MapPhysicalAddress(sm_entry->smbios_struct_addr,
+						    (sm_entry->smbios_struct_len/VMM_PAGE_SIZE)+2);
+
     for (int i = 0; i < sm_entry->smbios_struct_count; i++) {
 	SMBiosStrHeader* smheader = (SMBiosStrHeader*)smbios_ptr;
 	

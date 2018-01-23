@@ -291,10 +291,11 @@ void VMM::Init(annos::PMM* pmm, const uintptr_t phys_cr3_base,
     identity_ptbl[0].addr = 0;
     VMM::_pmm = pmm;
 
-    Log::Write(Debug, "vmm", "VMM::AllocateVirtual(15) = %08x",
-	       VMM::AllocateVirtual(15));
-    Log::Write(Debug, "vmm", "VMM::MapPhysicalAddress(15) = %08x",
-	       VMM::MapPhysicalAddress(0x7fe0000, 10));    
+    // Unmap addresses from 0xf0000 to 0x3f0000
+    // Ensure **we** have control of these addresses.
+    VMM::UnmapVirtual(0xf0000, 0x300000/VMM_PAGE_SIZE);
+    
+    
     // Reload cr3, this flushes the TLB.
     // (Next framebuffer access might cause a page fault)
     asm("mov %0, %%cr3" : : "r"(phys_cr3_base & ~0x3ff));
@@ -366,6 +367,9 @@ virt_t VMM::MapPhysicalAddress(phys_t phys, size_t n,
 				      VMMZone vzone)
 {
     auto last_vaddr = vzones[vzone].last_vaddr;
+
+    unsigned off = phys & 0xfff;
+    phys &= ~0xfff; // align the physaddr to a page
 	
     auto alloc_end = last_vaddr + (VMM_PAGE_SIZE * n);
     if ((alloc_end-1) >= vzones[vzone].addr_end) {
@@ -381,9 +385,11 @@ virt_t VMM::MapPhysicalAddress(phys_t phys, size_t n,
     auto virtaddr = last_vaddr;
     VMM::MapPhysicalToVirtual(physaddr, n, virtaddr);
 
-    last_vaddr *= (VMM_PAGE_SIZE) * n;
+    last_vaddr += (VMM_PAGE_SIZE) * n;
+    
     vzones[vzone].last_vaddr = last_vaddr;
-    return virtaddr;
+
+    return virtaddr+off;
 }
 
 	
