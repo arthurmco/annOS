@@ -185,7 +185,6 @@ void kernel_main(BootStruct* bs) {
 	kprintf(" ...smbios");
 	b.Initialize();
     }
-
     
     for (;;) {
 	asm volatile("hlt");

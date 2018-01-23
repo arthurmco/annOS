@@ -1,7 +1,7 @@
 #include <arch/x86/VMM.hpp>
 #include <Log.hpp>
 #include <libk/panic.h>
-
+#include <libk/stdlib.h>
 
 using namespace annos;
 using namespace annos::x86;
@@ -176,10 +176,12 @@ int VMM::MapPhysicalToVirtual(phys_t phys, size_t n, virt_t virt)
     PageDir* pdir = (PageDir*)kernel_virt_cr3_base;
     Log::Write(Debug, "vmm", "pdir[%d] = %08x", dirindex, pdir[dirindex]);
     if (!pdir[dirindex].present) {
-	// Allocate directory, present and RW
+	// Allocate directory, present and RW, and clean all bytes of it
 	pdir[dirindex].addr = VMM::MapPageDirectoryIndex(dirindex) | 0x3;
+	memset((char*)(kernel_virt_first_table + (dirindex*4096)), 0, 4096);
     }
-
+    Log::Write(Debug, "vmm", "pdir[%d] = %08x", dirindex, pdir[dirindex]);
+    
     PageTable* ptbl = (PageTable*)kernel_virt_first_table;
     unsigned toffset = (dirindex * 1024) + tableindex;
     
@@ -190,7 +192,9 @@ int VMM::MapPhysicalToVirtual(phys_t phys, size_t n, virt_t virt)
 
     for (unsigned int i = 0; i < n; i++) {
 	Log::Write(Debug, "vmm", "dir %d tbl %d idx %d", dirindex, tableindex, i);
+	Log::Write(Debug, "vmm", "ptbl[%d] = %08x", toffset+i, ptbl[toffset+i].addr);
 	ptbl[toffset+i].addr = phys | 0x3; // Map an address, with present and RW bit
+	Log::Write(Debug, "vmm", "ptbl[%d] = %08x", toffset+i, ptbl[toffset+i].addr);
 	// 'tableindex' and 'dirindex' aren't used for indexing, just for
 	// keeping track of directory wraps (when we go through the last
 	// table of a directory)
@@ -327,7 +331,7 @@ virt_t VMM::AllocateVirtual(size_t n, VMMZone zone)
  */
 virt_t VMM::AllocateVirtualPhysical(phys_t* rphys, PMMZoneType pzone,
 					   size_t n, VMMZone vzone)
-{
+{    
     auto last_vaddr = vzones[vzone].last_vaddr;
     Log::Write(Debug, "vmm", "last_vaddr = %08x", last_vaddr);
 
@@ -372,6 +376,9 @@ virt_t VMM::MapPhysicalAddress(phys_t phys, size_t n,
     phys &= ~0xfff; // align the physaddr to a page
 	
     auto alloc_end = last_vaddr + (VMM_PAGE_SIZE * n);
+    Log::Write(Debug, "vmm", "phys %08x => virt %08x -> %d pages",
+	       phys, last_vaddr, n);
+    
     if ((alloc_end-1) >= vzones[vzone].addr_end) {
 	Log::Write(Fatal, "vmm",  "virtual address space exhausted for vmm zone %d", vzone);
 	panic("vmm: virtual address space exhausted");
