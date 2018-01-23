@@ -45,8 +45,7 @@ namespace annos::x86 {
 	 *
 	 * @return false if it won't be able to map, true if it will
 	 */
-	static bool CheckPhysicalToVirtual(phys_t phys, size_t n, virt_t virt,
-					   bool allow_nc = true);
+	static bool CheckPhysicalToVirtual(phys_t phys, size_t n, virt_t virt);
 	
 	/**
 	 * Map 'n' pages of physical address 'phys' to the virtual address 'virt'
@@ -57,8 +56,7 @@ namespace annos::x86 {
 	 * virtual pages to 2 contiguous phys pages, and the 4 contiguous pages,
 	 * this function will return 2. Or return -1 if it couldn't map.
 	 */
-	static int MapPhysicalToVirtual(phys_t phys, size_t n, virt_t virt,
-					    bool allow_nc = true);
+	static int MapPhysicalToVirtual(phys_t phys, size_t n, virt_t virt);
 
 	/**
 	 * Unmap 'n' bits starting from physical address 'virt'
@@ -88,7 +86,7 @@ namespace annos::x86 {
 	 *
 	 * Return the allocated virtual address
 	 */
-	static virt_t AllocateVirtualPhysical(phys_t* rphys, PMMZone pzone,
+	static virt_t AllocateVirtualPhysical(phys_t* rphys, PMMZoneType pzone,
 					      size_t n = 1,
 					      VMMZone vzone = VMMZone::ZKernel);
 

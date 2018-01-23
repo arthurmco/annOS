@@ -14,12 +14,12 @@ using namespace annos::x86;
  *  about the ZUser zone.
  */
 struct VMMZoneStruct {
-    virt_t addr_start; // The starting virtual address of that zone
-    virt_t addr_end;   // The ending virtual address
+    const virt_t addr_start; // The starting virtual address of that zone
+    const virt_t addr_end;   // The ending virtual address
     virt_t last_vaddr; // The last vaddr allocated. Invalidate this on cr3 switches.
 };
 
-const VMMZoneStruct vzones[MaxZones] = {
+VMMZoneStruct vzones[MaxZones] = {
     {.addr_start = 0x1000, .addr_end = 0xBFFFFFFF,
      .last_vaddr = 0x1000}, // User zone
     {.addr_start = 0xC0000000, .addr_end = 0xFFFFFFFF,
@@ -133,12 +133,9 @@ constexpr virt_t kernel_virt_first_table = 0xffc00000;
  *
  * @return false if it won't be able to map, true if it will
  */
-bool VMM::CheckPhysicalToVirtual(phys_t phys, size_t n,
-					virt_t virt,
-					bool allow_nc)
+bool VMM::CheckPhysicalToVirtual(phys_t phys, size_t n,	virt_t virt)
 {
-
-      
+    return true;
 }
 
 /**
@@ -169,9 +166,7 @@ phys_t VMM::MapPageDirectoryIndex(unsigned dirindex)
  * virtual pages to 2 contiguous phys pages, and the 4 contiguous pages,
  * this function will return 2. Or return -1 if it couldn't map.
  */
-int VMM::MapPhysicalToVirtual(phys_t phys, size_t n,
-					 virt_t virt,
-					 bool allow_nc)
+int VMM::MapPhysicalToVirtual(phys_t phys, size_t n, virt_t virt)
 {
 
     unsigned dirindex, tableindex;
@@ -294,13 +289,17 @@ void VMM::Init(annos::PMM* pmm, const uintptr_t phys_cr3_base,
 	       identity_ptbl[0]);
 
     identity_ptbl[0].addr = 0;
+    VMM::_pmm = pmm;
 
-   
+    Log::Write(Debug, "vmm", "VMM::AllocateVirtual(15) = %08x",
+	       VMM::AllocateVirtual(15));
+    Log::Write(Debug, "vmm", "VMM::MapPhysicalAddress(15) = %08x",
+	       VMM::MapPhysicalAddress(0x7fe0000, 10));    
     // Reload cr3, this flushes the TLB.
     // (Next framebuffer access might cause a page fault)
     asm("mov %0, %%cr3" : : "r"(phys_cr3_base & ~0x3ff));
 
-    VMM::_pmm = pmm;
+
 }
 
 /**
@@ -309,7 +308,8 @@ void VMM::Init(annos::PMM* pmm, const uintptr_t phys_cr3_base,
  */
 virt_t VMM::AllocateVirtual(size_t n, VMMZone zone)
 {
-
+    virt_t v = VMM::AllocateVirtualPhysical(NULL, PMMZoneType::Normal, n, zone);
+    return v;    
 }
 
 /**
@@ -324,10 +324,33 @@ virt_t VMM::AllocateVirtual(size_t n, VMMZone zone)
  *
  * Return the allocated virtual address
  */
-virt_t VMM::AllocateVirtualPhysical(phys_t* rphys, PMMZone pzone,
+virt_t VMM::AllocateVirtualPhysical(phys_t* rphys, PMMZoneType pzone,
 					   size_t n, VMMZone vzone)
 {
+    auto last_vaddr = vzones[vzone].last_vaddr;
+    Log::Write(Debug, "vmm", "last_vaddr = %08x", last_vaddr);
 
+    auto alloc_end = last_vaddr + (VMM_PAGE_SIZE * n);
+    if ((alloc_end-1) >= vzones[vzone].addr_end) {
+	Log::Write(Fatal, "vmm",  "virtual address space exhausted for vmm zone %d", vzone);
+	panic("vmm: virtual address space exhausted ");
+    }
+
+    // TODO: Allow even if the physical address fragment
+    //       Or allow this in the function above?
+    
+    auto physaddr = VMM::_pmm->AllocatePhysical(n, pzone);
+    if (physaddr == (uintptr_t)-1)
+	panic("vmm: physical mapping not successful");
+    
+    auto virtaddr = last_vaddr;
+    VMM::MapPhysicalToVirtual(physaddr, n, virtaddr);
+
+    last_vaddr += (VMM_PAGE_SIZE) * n;
+    vzones[vzone].last_vaddr = last_vaddr;
+    if (rphys)
+	*rphys = physaddr;
+    return virtaddr;
 }
 
 /**
@@ -342,7 +365,25 @@ virt_t VMM::AllocateVirtualPhysical(phys_t* rphys, PMMZone pzone,
 virt_t VMM::MapPhysicalAddress(phys_t phys, size_t n,
 				      VMMZone vzone)
 {
+    auto last_vaddr = vzones[vzone].last_vaddr;
+	
+    auto alloc_end = last_vaddr + (VMM_PAGE_SIZE * n);
+    if ((alloc_end-1) >= vzones[vzone].addr_end) {
+	Log::Write(Fatal, "vmm",  "virtual address space exhausted for vmm zone %d", vzone);
+	panic("vmm: virtual address space exhausted");
+    }
 
+    // Here, we shouldn't allow physical address fragmentation
+    auto physaddr = VMM::_pmm->MapPages(phys, n);
+    if (physaddr == (uintptr_t)-1)
+	panic("vmm: physical mapping not successful");
+    
+    auto virtaddr = last_vaddr;
+    VMM::MapPhysicalToVirtual(physaddr, n, virtaddr);
+
+    last_vaddr *= (VMM_PAGE_SIZE) * n;
+    vzones[vzone].last_vaddr = last_vaddr;
+    return virtaddr;
 }
 
 	
