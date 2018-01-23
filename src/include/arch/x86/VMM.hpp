@@ -18,13 +18,24 @@ namespace annos::x86 {
     enum VMMZone {
 	ZUser,
 	ZKernel,
+	ZAppLoader,
 	MaxZones
     };
+
+    #define VMM_PAGE_SIZE 4096
 
     class VMM {
     private:
 	static annos::PMM* _pmm;
 	static phys_t kernel_cr3_base;
+
+	/**
+	 * Map a directory entry index 'dirindex' in the current page
+	 * directory
+	 *
+	 * Return its physical address
+	 */
+	static phys_t MapPageDirectoryIndex(unsigned dirindex);
 
 	/**
 	 * Check if it can map 'n' pages of physical address 'phys' to virtual
@@ -48,6 +59,11 @@ namespace annos::x86 {
 	 */
 	static int MapPhysicalToVirtual(phys_t phys, size_t n, virt_t virt,
 					    bool allow_nc = true);
+
+	/**
+	 * Unmap 'n' bits starting from physical address 'virt'
+	 */
+	static int UnmapVirtual(virt_t virt, size_t n);
 	
     public:
 	static void Init(annos::PMM* pmm, uintptr_t phys_cr3_base,

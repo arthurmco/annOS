@@ -61,15 +61,15 @@ static bool fnPageFaultHandler(FaultRegs* regs)
 
     kprintf("\t \033[1mFUCK.\033[0m\n\t");
 
-    if (cr2 == 0x0) {
-	Log::Write(Fatal, "", "page fault: null pointer dereference\n"
-		   "\t flags: %02x \033[1m", cr2, regs->error_code);
+    if (cr2 >= 0x0 && cr2 < 0x1000) {
+	Log::Write(Fatal, "", "page fault: null pointer dereference eip 0x%08x\n"
+		   "\t flags: %02x \033[1m", regs->eip, regs->error_code);
 	
 	kprintf("\t \033[41;37;1mpanic:\033[0m page fault: null pointer dereferenced\n"
 	    "\t flags: \033[1m", cr2);
     } else {
-	Log::Write(Fatal, "", "unrecoverable page fault at address 0x%08x\n"
-		   "\t flags: %02x \033[1m", cr2, regs->error_code);
+	Log::Write(Fatal, "", "unrecoverable page fault at address 0x%08x ip 0x%08x\n"
+		   "\t flags: %02x \033[1m", cr2, regs->eip, regs->error_code);
 	
 	kprintf("\t \033[41;37;1mpanic:\033[0m unrecoverable page fault at address 0x%08x\n"
 	    "\t flags: \033[1m", cr2);

@@ -20,8 +20,20 @@ struct VMMZoneStruct {
 };
 
 const VMMZoneStruct vzones[MaxZones] = {
-    {.addr_start = 0x0, .addr_end = 0xBFFFFFFF}, // User zone
-    {.addr_start = 0xC0000000, .addr_end = 0xffffffff} // Kernel zone
+    {.addr_start = 0x1000, .addr_end = 0xBFFFFFFF,
+     .last_vaddr = 0x1000}, // User zone
+    {.addr_start = 0xC0000000, .addr_end = 0xFFFFFFFF,
+     .last_vaddr = 0xC0400000  }, // Kernel zone
+
+    /* Address used for loading apps.
+       This zone is here only for us not to expose the physical to virtual
+       address to the benefit of one subsystem
+       
+       addr_end need to be bigger than the biggest executable you find.
+       (truly, only bigger than its code section)
+    */
+    {.addr_start = 0x400000, .addr_end = 0x480000,
+     .last_vaddr = 0x400000 }
 };
 
 /**
@@ -106,6 +118,13 @@ phys_t VMM::kernel_cr3_base;
 
 constexpr virt_t kernel_virt_cr3_base = 0xfffff000;
 
+/* The page directory table is recursively mapped at the last directory,
+   and its directories are mapped as tables
+   Consequentially, the first table is mapped at 2^32 - 4MB, since 4mb is the
+   size of a page directory
+*/ 
+constexpr virt_t kernel_virt_first_table = 0xffc00000;
+
 /**
  * Check if it can map 'n' pages of physical address 'phys' to virtual
  * 'virt'.
@@ -121,6 +140,25 @@ bool VMM::CheckPhysicalToVirtual(phys_t phys, size_t n,
 
       
 }
+
+/**
+ * Map a directory entry index 'dirindex' in the current page
+ * directory
+ *
+ * Return its physical address
+ */
+phys_t VMM::MapPageDirectoryIndex(unsigned dirindex)
+{
+    if (dirindex >= 1024)
+	panic("vmm: tried to allocate directory entry with dirindex > 1024");
+
+    // map present and RW
+
+    auto p = VMM::_pmm->AllocatePhysical();
+    Log::Write(Debug, "vmm", "mapped phys page %08x for diridx %d", p, dirindex);
+    return p;
+}
+
 	
 /**
  * Map 'n' pages of physical address 'phys' to the virtual address 'virt'
@@ -141,14 +179,87 @@ int VMM::MapPhysicalToVirtual(phys_t phys, size_t n,
     dirindex = (virt >> 22);
 
     PageDir* pdir = (PageDir*)kernel_virt_cr3_base;
+    Log::Write(Debug, "vmm", "pdir[%d] = %08x", dirindex, pdir[dirindex]);
     if (!pdir[dirindex].present) {
-	Log::Write(Fatal, "vmm", "page dir %d isn't mapped", dirindex);
-	panic("vmm: page directory isn't mapped");
+	// Allocate directory, present and RW
+	pdir[dirindex].addr = VMM::MapPageDirectoryIndex(dirindex) | 0x3;
     }
 
+    PageTable* ptbl = (PageTable*)kernel_virt_first_table;
+    unsigned toffset = (dirindex * 1024) + tableindex;
     
+    if (ptbl[toffset].present) {
+	Log::Write(Warning, "vmm", "page dir %d table %d vaddr %08x already mapped",
+		   dirindex, tableindex, virt);
+    }
+
+    for (unsigned int i = 0; i < n; i++) {
+	Log::Write(Debug, "vmm", "dir %d tbl %d idx %d", dirindex, tableindex, i);
+	ptbl[toffset+i].addr = phys | 0x3; // Map an address, with present and RW bit
+	// 'tableindex' and 'dirindex' aren't used for indexing, just for
+	// keeping track of directory wraps (when we go through the last
+	// table of a directory)
+	tableindex++;
+	phys += VMM_PAGE_SIZE;
+
+	
+	if (tableindex >= 1024) {
+	    dirindex++;
+	    tableindex = 0;
+
+	    if (!pdir[dirindex].present)
+		pdir[dirindex].addr = VMM::MapPageDirectoryIndex(dirindex) | 0x3;
+	}
+    }
+
+    return n;    
+}
+
+/**
+ * Unmap 'n' bits starting from physical address 'virt'
+ */
+int VMM::UnmapVirtual(virt_t virt, size_t n)
+{
+    unsigned dirindex, tableindex;
+    tableindex = (virt >> 12) & 0x3ff;
+    dirindex = (virt >> 22);
+
+    PageDir* pdir = (PageDir*)kernel_virt_cr3_base;
+    Log::Write(Debug, "vmm", "pdir[%d] = %08x", dirindex, pdir[dirindex]);
+    if (!pdir[dirindex].present) {
+	Log::Write(Fatal, "vmm", "Deallocating map from unmapped directory (index %d)",
+			   dirindex);
+    }
+
+    PageTable* ptbl = (PageTable*)kernel_virt_first_table;
+    unsigned toffset = (dirindex * 1024) + tableindex;
     
-    
+    if (ptbl[toffset].present) {
+	Log::Write(Warning, "vmm", "page dir %d table %d vaddr %08x already mapped",
+		   dirindex, tableindex, virt);
+    }
+
+    for (unsigned int i = 0; i < n; i++) {
+	ptbl[toffset+i].addr &= ~0x1; // Erase the present bit.
+	
+	// 'tableindex' and 'dirindex' aren't used for indexing, just for
+	// keeping track of directory wraps (when we go through the last
+	// table of a directory)
+	tableindex++;
+	if (tableindex >= 1024) {
+	    dirindex++;
+	    tableindex = 0;
+
+	    // TODO: Check and allocate another directory
+	    if (!pdir[dirindex].present) {
+		Log::Write(Fatal, "vmm", "Deallocating map from unmapped directory (index %d)",
+			   dirindex);
+	    }
+		
+	}
+    }
+
+    return n;
 }
 
 void VMM::Init(annos::PMM* pmm, const uintptr_t phys_cr3_base,
@@ -184,12 +295,12 @@ void VMM::Init(annos::PMM* pmm, const uintptr_t phys_cr3_base,
 
     identity_ptbl[0].addr = 0;
 
-    unsigned* ip = (unsigned*)NULL;
-    *ip = 0x220;
-
+   
     // Reload cr3, this flushes the TLB.
     // (Next framebuffer access might cause a page fault)
     asm("mov %0, %%cr3" : : "r"(phys_cr3_base & ~0x3ff));
+
+    VMM::_pmm = pmm;
 }
 
 /**
