@@ -162,9 +162,12 @@ void SMBios::ParseSysInformation(SMBiosStrHeader* hdr)
     const char* sku = this->GetSMBiosString(hdr, sinfo->serialnumber_sp);
     const char* model = this->GetSMBiosString(hdr, sinfo->serialnumber_sp);
 
-    Log::Write(Info, "smbios", "Manufacturer: %s", manufacturer);
-    Log::Write(Info, "smbios", "Product: %s", product);
-    Log::Write(Info, "smbios", "Version: %s", version);
+    Log::Write(Info, "smbios", "Manufacturer: %s",
+	       (manufacturer) ? manufacturer : "<null>");
+    Log::Write(Info, "smbios", "Product: %s",
+	       (product) ? product : "<null>");
+    Log::Write(Info, "smbios", "Version: %s",
+	       (version) ? version : "<null>");
     Log::Write(Info, "smbios", "Serial number: %s",
 	       (serialnum) ? serialnum : "<null>");
 
@@ -205,10 +208,11 @@ void SMBios::ParseSysProcessor(SMBiosStrHeader* hdr)
     Log::Write(Info, "smbios", "Processor ID: %08x %08x",
 	       ((uint32_t)(smproc->proc_id >> 32)),
 	       ((uint32_t)(smproc->proc_id & 0xffffffff)));
-    Log::Write(Info, "smbios", "Processor Manufacturer: %s", proc_manufacturer);
+    Log::Write(Info, "smbios", "Processor Manufacturer: %s",
+	       (proc_manufacturer) ? proc_manufacturer : "<null>");
     Log::Write(Info, "smbios", "Processor Version: %s",
 	       (proc_version) ? proc_version : "<null>");
-    Log::Write(Info, "smbios", "Processor Clock: %d MHz", smproc->clock_mhz);
+    Log::Write(Info, "smbios", "Bus Clock: %d MHz", smproc->clock_mhz);
     Log::Write(Info, "smbios", "Processor Max Clock: %d MHz",
 	       smproc->max_speed_mhz);
     Log::Write(Info, "smbios", "Processor Current Clock: %d MHz",
