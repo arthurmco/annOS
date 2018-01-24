@@ -12,6 +12,11 @@
 
 typedef uintptr_t virt_t;
 
+/**
+ * TODO: Make possible to check if a page was allocate and skip it in the 
+ * AllocateVirtual* functions
+ */
+
 
 namespace annos::x86 {
 

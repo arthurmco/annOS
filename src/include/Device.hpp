@@ -60,7 +60,7 @@ namespace annos {
 	int ProcessIoctl(uint32_t function_name,
 			 uint64_t v0, uint64_t v1,
 			 uint64_t* ret, void* ptr);
-	
+
 	
     };
 }

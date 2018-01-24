@@ -20,5 +20,5 @@ namespace annos::x86 {
     void out16(uint16_t port, uint16_t);
 
     uint32_t in32(uint16_t port);
-    void out32(uint16_t port, int32_t);
+    void out32(uint16_t port, uint32_t);
 }

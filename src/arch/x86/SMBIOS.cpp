@@ -114,10 +114,14 @@ void SMBios::ParseBiosInformation(SMBiosStrHeader* hdr)
     const char* vendor = this->GetSMBiosString(hdr, binfo->vendor_strptr);
     const char* version = this->GetSMBiosString(hdr, binfo->version_strptr);
     const char* rdate = this->GetSMBiosString(hdr, binfo->releasedate_strptr);
+
     
-    Log::Write(Info, "smbios", "BIOS vendor: %s", vendor);
-    Log::Write(Info, "smbios", "BIOS version: %s", version);
-    Log::Write(Info, "smbios", "BIOS release date: %s", rdate);
+    Log::Write(Info, "smbios", "BIOS vendor: %s",
+	       (vendor) ? vendor : "<null>");
+    Log::Write(Info, "smbios", "BIOS version: %s",
+	       (version) ? version : "<null>");
+    Log::Write(Info, "smbios", "BIOS release date: %s",
+	       (rdate) ? rdate : "<null>");
     Log::Write(Info, "smbios", "BIOS starting segment: %04x",
 	       binfo->starting_segment);
     Log::Write(Info, "smbios", "BIOS ROM size: %d kB",

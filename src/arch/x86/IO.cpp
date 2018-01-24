@@ -41,7 +41,7 @@ uint32_t annos::x86::in32(uint16_t port)
     return val;
 }
 
-void out32(uint16_t port, uint32_t val)
+void annos::x86::out32(uint16_t port, uint32_t val)
 {
     asm("outl %0, %1" : : "a"(val), "Nd"(port) );
 }
