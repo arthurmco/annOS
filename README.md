@@ -29,6 +29,12 @@ Please contribute, I'm going to love it :heart:
 Open a pull request if you like, check the issues, help me to improve it, if you 
 like. Have fun!
 
+## I wanna see it
+
+Well, an image is worth a thousand words...
+
+![annOS image](https://imgur.com/a/HsllM)
+
 ## License
 
 All of this source code is licensed under the MIT license.
