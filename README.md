@@ -33,7 +33,7 @@ like. Have fun!
 
 Well, an image is worth a thousand words...
 
-![annOS image](https://imgur.com/a/HsllM)
+![annOS image](https://i.imgur.com/hAA5aHh.png)
 
 ## License
 
