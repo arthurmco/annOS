@@ -31,7 +31,7 @@ void SerialLogConsole::WriteChar(char c)
 {
     volatile unsigned int timeout=0;
     while ( (in8(this->portno+5) & 0x20) == 0 ) {
-	if ((timeout++) > 0xfffffff0) {
+	if ((timeout++) > 0xfffff0) {
 	    return;
 	}
     }
@@ -60,7 +60,7 @@ SerialLogConsole::SerialLogConsole()
     out8(this->portno+2, 0x87);
     this->WriteString("\n\n \033[1m-[annOS]-\033[0m \n");
     this->WriteString("Serial log console started: "
-		      "\033[38;5;74m9600\033[0m baud, "
+		      "\033[38;5;74m115200\033[0m baud, "
 		      "\033[38;5;74m8n1\033[0m\n");
 }
 	

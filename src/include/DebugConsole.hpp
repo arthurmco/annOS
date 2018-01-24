@@ -22,7 +22,7 @@ namespace annos {
 	void WriteChar(char c);
 
 	const int portno = 0x3f8;
-	const int baud = 9600;
+	const int baud = 115200;
 	
     public:
 	/* Do a basic setup */
