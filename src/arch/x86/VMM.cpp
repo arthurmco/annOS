@@ -166,7 +166,8 @@ phys_t VMM::MapPageDirectoryIndex(unsigned dirindex)
  * virtual pages to 2 contiguous phys pages, and the 4 contiguous pages,
  * this function will return 2. Or return -1 if it couldn't map.
  */
-int VMM::MapPhysicalToVirtual(phys_t phys, size_t n, virt_t virt)
+int VMM::MapPhysicalToVirtual(phys_t phys, size_t n, virt_t virt,
+			      uint8_t flags)
 {
 
     unsigned dirindex, tableindex;
@@ -193,7 +194,7 @@ int VMM::MapPhysicalToVirtual(phys_t phys, size_t n, virt_t virt)
     for (unsigned int i = 0; i < n; i++) {
 	Log::Write(Debug, "vmm", "dir %d tbl %d idx %d", dirindex, tableindex, i);
 	Log::Write(Debug, "vmm", "ptbl[%d] = %08x", toffset+i, ptbl[toffset+i].addr);
-	ptbl[toffset+i].addr = phys | 0x3; // Map an address, with present and RW bit
+	ptbl[toffset+i].addr = phys | (flags & 0x7f); // Map an address, with present and RW bit
 	Log::Write(Debug, "vmm", "ptbl[%d] = %08x", toffset+i, ptbl[toffset+i].addr);
 	// 'tableindex' and 'dirindex' aren't used for indexing, just for
 	// keeping track of directory wraps (when we go through the last
@@ -311,9 +312,9 @@ void VMM::Init(annos::PMM* pmm, const uintptr_t phys_cr3_base,
  * Allocate next avaliable 'n' pages from zone 'zone'.
  * Return the allocated virtual address from that zone
  */
-virt_t VMM::AllocateVirtual(size_t n, VMMZone zone)
+virt_t VMM::AllocateVirtual(size_t n, uint8_t flags, VMMZone zone)
 {
-    virt_t v = VMM::AllocateVirtualPhysical(NULL, PMMZoneType::Normal, n, zone);
+    virt_t v = VMM::AllocateVirtualPhysical(NULL, PMMZoneType::Normal, n, flags, zone);
     return v;    
 }
 
@@ -330,7 +331,7 @@ virt_t VMM::AllocateVirtual(size_t n, VMMZone zone)
  * Return the allocated virtual address
  */
 virt_t VMM::AllocateVirtualPhysical(phys_t* rphys, PMMZoneType pzone,
-					   size_t n, VMMZone vzone)
+				    size_t n,  uint8_t flags, VMMZone vzone)
 {    
     auto last_vaddr = vzones[vzone].last_vaddr;
     Log::Write(Debug, "vmm", "last_vaddr = %08x", last_vaddr);
@@ -349,7 +350,7 @@ virt_t VMM::AllocateVirtualPhysical(phys_t* rphys, PMMZoneType pzone,
 	panic("vmm: physical mapping not successful");
     
     auto virtaddr = last_vaddr;
-    VMM::MapPhysicalToVirtual(physaddr, n, virtaddr);
+    VMM::MapPhysicalToVirtual(physaddr, n, virtaddr, flags);
 
     last_vaddr += (VMM_PAGE_SIZE) * n;
     vzones[vzone].last_vaddr = last_vaddr;
@@ -367,7 +368,7 @@ virt_t VMM::AllocateVirtualPhysical(phys_t* rphys, PMMZoneType pzone,
  *
  * Return the mapped virtual address for that physical address
  */
-virt_t VMM::MapPhysicalAddress(phys_t phys, size_t n,
+virt_t VMM::MapPhysicalAddress(phys_t phys, size_t n, uint8_t flags,
 				      VMMZone vzone)
 {
     auto last_vaddr = vzones[vzone].last_vaddr;
@@ -390,7 +391,7 @@ virt_t VMM::MapPhysicalAddress(phys_t phys, size_t n,
 	panic("vmm: physical mapping not successful");
     
     auto virtaddr = last_vaddr;
-    VMM::MapPhysicalToVirtual(physaddr, n, virtaddr);
+    VMM::MapPhysicalToVirtual(physaddr, n, virtaddr, flags);
 
     last_vaddr += (VMM_PAGE_SIZE) * n;
     
@@ -399,5 +400,11 @@ virt_t VMM::MapPhysicalAddress(phys_t phys, size_t n,
     return virtaddr+off;
 }
 
-	
+/**
+ * Unmap 'n' pages starting from physical address 'phys' 
+ */
+void VMM::Unmap(virt_t virt, size_t n)
+{
+    VMM::UnmapVirtual(virt, n);
+}
 

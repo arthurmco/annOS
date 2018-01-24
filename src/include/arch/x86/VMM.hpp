@@ -16,10 +16,26 @@ typedef uintptr_t virt_t;
 namespace annos::x86 {
 
     enum VMMZone {
-	ZUser,
-	ZKernel,
-	ZAppLoader,
+	ZUser,        // Virtual memory area for user mode data
+	ZKernel,      // Virtual memory area for kernel mode data
+	ZAppLoader,   // Virtual memory area for loading user application
 	MaxZones
+    };
+
+    /* Page allocation flags 
+       To ease things and make the system faster, those enums are directly 
+       mapped to the bitflags of the x86 page tables
+
+       TODO: Change the numbers when porting to other architectures
+     */
+    enum VMMFlags : uint8_t {
+	ReadOnly = 0x1,     /* Page is read only */
+	ReadWrite = 0x3,    /* Page is readable and writable */
+	WriteThrough = 0x8, /* Write-through cache enabled. Good for DMA */
+	NonCached = 0x10,   /* Page contents are not cached */
+
+	NoExecute = 0x80, /* Non executable page. 
+			     Might be non-existant on some systems */
     };
 
     #define VMM_PAGE_SIZE 4096
@@ -56,7 +72,8 @@ namespace annos::x86 {
 	 * virtual pages to 2 contiguous phys pages, and the 4 contiguous pages,
 	 * this function will return 2. Or return -1 if it couldn't map.
 	 */
-	static int MapPhysicalToVirtual(phys_t phys, size_t n, virt_t virt);
+	static int MapPhysicalToVirtual(phys_t phys, size_t n, virt_t virt,
+					uint8_t flags = VMMFlags::ReadWrite);
 
 	/**
 	 * Unmap 'n' bits starting from physical address 'virt'
@@ -72,6 +89,7 @@ namespace annos::x86 {
 	 * Return the allocated virtual address from that zone
 	 */
 	static virt_t AllocateVirtual(size_t n = 1,
+				      uint8_t flags = VMMFlags::ReadWrite,
 				      VMMZone zone = VMMZone::ZKernel);
 
 	/**
@@ -86,8 +104,10 @@ namespace annos::x86 {
 	 *
 	 * Return the allocated virtual address
 	 */
-	static virt_t AllocateVirtualPhysical(phys_t* rphys, PMMZoneType pzone,
+	static virt_t AllocateVirtualPhysical(phys_t* rphys,
+					      PMMZoneType pzone,
 					      size_t n = 1,
+					      uint8_t flags = VMMFlags::ReadWrite,
 					      VMMZone vzone = VMMZone::ZKernel);
 
 	/**
@@ -101,8 +121,14 @@ namespace annos::x86 {
 	 */
 	static virt_t MapPhysicalAddress(phys_t phys,
 					 size_t n = 1,
+					 uint8_t flags = VMMFlags::ReadWrite,
 					 VMMZone vzone = VMMZone::ZKernel);
 
+
+	/**
+	 * Unmap 'n' pages starting from physical address 'phys' 
+	 */
+	static void Unmap(virt_t virt, size_t n);
     };
     
 }

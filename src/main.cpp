@@ -185,6 +185,10 @@ void kernel_main(BootStruct* bs) {
 	kprintf(" ...smbios");
 	b.Initialize();
     }
+
+    virt_t vaddr = ::x86::VMM::AllocateVirtual(
+	10, ::x86::VMMFlags::ReadWrite | ::x86::VMMFlags::WriteThrough);
+    kprintf("\n %08x \n", vaddr);
     
     for (;;) {
 	asm volatile("hlt");

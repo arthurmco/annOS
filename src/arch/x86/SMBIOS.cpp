@@ -51,6 +51,7 @@ bool SMBios::Detect()
 			   smbios_addr);
 
 		this->_smbios_entry_addr = smbios_addr + 0xc0000000;
+		
 		return true;
 	    }
 	}
@@ -231,7 +232,7 @@ void SMBios::Initialize()
     if (!this->_smbios_entry_addr)
 	if (!this->Detect())
 	    return;
-    
+
     volatile SMBiosEntry* sm_entry = ( SMBiosEntry* )this->_smbios_entry_addr;
 
     Log::Write(Info, "smbios", "entry point: len 0x%x, version %d.%d",
@@ -294,6 +295,8 @@ void SMBios::Initialize()
 	    strlength += 2;
 
 	smbios_ptr += (smheader->length + strlength);
+
+
     }
 
 }
