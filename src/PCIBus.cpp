@@ -80,8 +80,8 @@ void PCIBus::Initialize()
 
     for (unsigned i = 0; i < pidx; i++) {
 	PCIDev* pd = &pcidevs[i];
-	Log::Write(Debug, "pcibus", "device %d is %04x:%04x, command %04x, status %04x, type %02x", i, pd->vendor, pd->device, pd->command, pd->status, pd->header_type);
-	Log::Write(Debug, "pcibus", "            class %02x:%02x, rev %02x progid %02x", pd->classcode, pd->subclass, pd->rev, pd->prog_id);
+	Log::Write(Info, "pcibus", "device %d is %04x:%04x, command %04x, status %04x, type %02x", i, pd->vendor, pd->device, pd->command, pd->status, pd->header_type);
+	Log::Write(Info, "pcibus", "            class %02x:%02x, rev %02x progid %02x", pd->classcode, pd->subclass, pd->rev, pd->prog_id);
 
 	switch ((pd->header_type & 0xf)) {
 	case 0:
@@ -100,7 +100,7 @@ void PCIBus::Initialize()
 		    }
 		    
 		    
-		    Log::Write(Debug, "pcibus", "            bar[%d] = (%s at %x)",
+		    Log::Write(Info, "pcibus", "            bar[%d] = (%s at %x)",
 			       baridx, type, addr);
 		}
 	    }
@@ -120,7 +120,7 @@ void PCIBus::Initialize()
 		    }
 		    
 		    
-		    Log::Write(Debug, "pcibus", "            bar[%d] = (%s at %x)",
+		    Log::Write(Info, "pcibus", "            bar[%d] = (%s at %x)",
 			       baridx, type, addr);
 		}
 
@@ -129,8 +129,8 @@ void PCIBus::Initialize()
 	    
 	}
 	
-	
-	Log::Write(Debug, "pcibus", "            interrupt %d at pin %02x", pd->dev.interrupt_line, pd->dev.interrupt_pin);
+	if (pd->dev.interrupt_line > 0)
+	    Log::Write(Info, "pcibus", "            interrupt %d at pin %02x", pd->dev.interrupt_line, pd->dev.interrupt_pin);
     }
 }
 
