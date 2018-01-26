@@ -157,6 +157,46 @@ namespace annos::x86 {
 	// TODO: Implement remaining...
     } __attribute__((packed));
 
+    /**
+     * SMBIOS memory device, type 17 (0x11)
+     * Useful for getting the OEM-said memory count
+     */
+    struct SMBios_MemDevice {
+	SMBiosStrHeader hdr;
+	uint16_t memarray_handle;
+	uint16_t memerr_handle;
+	uint16_t total_width, data_width;
+
+	/*
+	  If size is 0x7fff, true RAM size is on 'extended_size'
+	  If size is 0xffff, the BIOS don't know RAM size
+	  If size is 0, no memory is installed in this socket
+	  
+	  If bit 15 (0x8000) is set, the value is in KB. If it's clear, is in MB
+	*/
+	uint16_t size;
+
+	uint8_t form_factor;
+	uint8_t device_set_id;
+
+	uint8_t device_location_sp;
+	uint8_t bank_location_sp;
+
+	uint8_t mem_type;
+	uint16_t mem_type_detail;
+
+	uint16_t speed_mhz;
+
+	uint8_t manufacturer_sp;
+	uint8_t serialnumber_sp;
+	uint8_t asset_tag_sp;
+	uint8_t part_number_sp;
+	
+	uint8_t attributes;
+
+	uint32_t extended_size;
+	// TODO: Implement remaining
+    } __attribute__((packed));
     
     /**
      * SMBIOS isn't really a device, is just a standard defining a table
@@ -166,7 +206,7 @@ namespace annos::x86 {
      */
     class SMBios : public Device {
     private:
-	uintptr_t _smbios_entry_addr = NULL;
+	uintptr_t _smbios_entry_addr = (uintptr_t)NULL;
 
 	/* Gets the string index 'idx' after the smbios table 'tbl'
 	 */
@@ -180,10 +220,12 @@ namespace annos::x86 {
 
 	/* Parse SMBIOS baseboard information header */
 	void ParseBoardInformation(SMBiosStrHeader* hdr);
-
 	
 	/* Parse SMBIOS processor header */
 	void ParseSysProcessor(SMBiosStrHeader* hdr);
+
+        /* Parse memory device header */
+	void ParseMemDevice(SMBiosStrHeader* hdr);
 	
     public:
 	SMBios()

@@ -193,6 +193,45 @@ void SMBios::ParseSysInformation(SMBiosStrHeader* hdr)
 
 }
 
+/* Parse memory device header */
+void SMBios::ParseMemDevice(SMBiosStrHeader* hdr)
+{
+    SMBios_MemDevice* minfo = (SMBios_MemDevice*)hdr;
+
+    const char* manufacturer = this->GetSMBiosString(hdr, minfo->manufacturer_sp);
+    const char* serialnum = this->GetSMBiosString(hdr, minfo->serialnumber_sp);
+    const char* asset_tag = this->GetSMBiosString(hdr, minfo->asset_tag_sp);
+    const char* part_number = this->GetSMBiosString(hdr, minfo->part_number_sp);
+    const char* dev_location = this->GetSMBiosString(hdr, minfo->device_location_sp);
+    const char* bank_location = this->GetSMBiosString(hdr, minfo->bank_location_sp);
+
+    Log::Write(Info, "smbios", "Memory located at array handle %04x",
+	       minfo->memarray_handle);
+    Log::Write(Info, "smbios", "\tLocated at bank %s device %s",
+	       (bank_location) ? bank_location : "<null>",
+	       (dev_location) ? dev_location : "<null>");
+
+    unsigned size_kb = 0;
+    if (minfo->size == 0x7fff)
+	size_kb = minfo->extended_size * 1024;
+    else if (minfo->size & 0x8000)
+	size_kb = minfo->size & 0x7fff;
+    else
+	size_kb = minfo->size * 1024;
+	    
+    Log::Write(Info, "smbios", "\tSize: %d MB, %d MHz", size_kb/1024,
+	       minfo->speed_mhz);
+
+    Log::Write(Info, "smbios", "\tManufacturer: %s",
+	       (manufacturer) ? manufacturer : "<null>");
+    Log::Write(Info, "smbios", "\tSerial number: %s",
+	       (serialnum) ? serialnum : "<null>");
+    Log::Write(Info, "smbios", "\tAsset Tag: %s",
+	       (asset_tag) ? asset_tag : "<null>");
+    Log::Write(Info, "smbios", "\tPart number: %s",
+	       (part_number) ? part_number : "<null>");
+}
+
 /* Parse SMBIOS processor header */
 void SMBios::ParseSysProcessor(SMBiosStrHeader* hdr)
 {
@@ -264,17 +303,18 @@ void SMBios::Initialize()
 	Log::Write(Debug, "smbios", "struct %d is type %02d len %d handle %04x "
 		   "address 0x%08x",
 		   (i+1), smheader->type, smheader->length, smheader->handle,
-		   smbios_ptr);
+		   smbios_ptrg);
 
 	switch (smheader->type) {
 	case 0: this->ParseBiosInformation(smheader); break;
 	case 1: this->ParseSysInformation(smheader); break;
 	case 2: this->ParseBoardInformation(smheader); break;
 	case 4: this->ParseSysProcessor(smheader); break;
+	case 17: this->ParseMemDevice(smheader); break;
 	}
 
 	// The string table isn't considered in the smbios length field
-	// because i don't know.
+	// Why? i don't know.
 	// So we need to traverse it to determine the correct pointer to
 	// the next one
 
