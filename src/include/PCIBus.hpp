@@ -30,7 +30,7 @@ namespace annos {
     /* PCI device structure 
      * Created from info stored on PCI registers
      */
-    struct PCIDev {
+    struct PCIRegister {
 	// PCI vendor and device ID
 	uint16_t vendor, device;
 
@@ -83,12 +83,36 @@ namespace annos {
 	} __attribute__((packed));
 	
     } __attribute__((packed));
+
+    /**
+     * PCI Device information
+     */
+    struct PCIDev {
+	uint8_t bus, dev, func;
+	PCIRegister reginfo;
+    };
     
     class PCIBus : public Device {
-    private:
+	friend class PCIDevice;
 	
+    private:	
 	const unsigned short CONFIG_ADDRESS = 0xCF8;
 	const unsigned short CONFIG_DATA = 0xCFC;
+
+	/**
+	 * Make a read with 'size' bytes in the PCI register 'idx' of device
+	 * 'dev'
+	 *
+	 * @return the content read
+	 *
+	 * @remarks Note that 'size' can only be a multiple of 8
+	 */
+	template<uint8_t size>
+	unsigned ReadPCIRegister(PCIDev* dev, unsigned idx);
+	// TODO: Handle the case of register query crossing a 4-byte boundary
+	// (i.e, you have to do 2 reads to get the full register)
+	// No one of the PCI common registers needs this. Should I treat this
+	// or this will never happen?
 	
     public:
 	PCIBus()

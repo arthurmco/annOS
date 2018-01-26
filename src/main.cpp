@@ -95,7 +95,7 @@ extern "C"
 void kernel_main(BootStruct* bs) {
     VGAConsole v;
     v.Clear();
-    v.WriteVGA("annos v0.0.1\n", BaseColors::LightBlue);
+    v.WriteVGA("annos v0.1.0\n", BaseColors::LightBlue);
     v.WriteVGA("Copyright (C) 2018 Arthur M\n");
 
     init_stdio(&v);
