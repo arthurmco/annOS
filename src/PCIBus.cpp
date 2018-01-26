@@ -55,6 +55,63 @@ unsigned PCIBus::ReadPCIRegister(PCIDev* dev, unsigned idx)
     return ret;
 }
 
+
+/**
+ * Finds PCI device by vendor and device IDs
+ *
+ * @returns PCIDev struct containing the device info, or NULL
+ *          if it couldn't be found
+ */
+PCIDev* PCIBus::FindPCIByVendor(uint16_t vendor, uint16_t device)
+{
+    for (unsigned i = 0; i < pcidev_count; i++) {
+	PCIRegister* r = &(this->pcidevs[i].reginfo);
+
+	if (r->vendor == vendor && r->device == device)
+	    return &this->pcidevs[i];
+    }
+    
+    return NULL;
+}
+
+/**
+ * Finds PCI devices by classcode and subclass
+ * 'list_count' is the size of the array returned
+ *
+ * @returns a pointer to an array containing the devices,
+ *          or NULL if it couldn't find none.
+ */
+PCIDev* PCIBus::FindPCIByClass(uint16_t classcode, uint16_t subclass,
+			       unsigned& list_count)
+{
+    // TODO: support returning more than one device
+    for (unsigned i = 0; i < pcidev_count; i++) {
+	PCIRegister* r = &(this->pcidevs[i].reginfo);
+
+	if (r->classcode == classcode && r->subclass == subclass) {
+	    list_count = 1;
+	    return &this->pcidevs[i];
+	}
+    }
+
+    list_count = 0;
+    return NULL;
+}
+
+/**
+ * Write 'data', with 'size' bytes in the PCI register 'idx' of device
+ * 'dev'
+ *
+ * @return the content read
+ *
+ * @remarks Note that 'size' can only be a multiple of 8
+ */
+template<uint8_t size>
+void WritePCIRegister(PCIDev* dev, unsigned idx, unsigned data)
+{
+    panic("unimplemented");
+}
+
 /** 
  *  Initializate and discover the devices connected there
  */
@@ -62,9 +119,7 @@ void PCIBus::Initialize()
 {
     Log::Write(Info, "pcibus", "Querying PCI devices");
 
-    constexpr int maxpcidevs = 16;
     unsigned pidx = 0;
-    PCIDev pcidevs[maxpcidevs];
 
     /* Query devices and list them */
     for (unsigned bus = 0; bus < 255; bus++) {
@@ -96,7 +151,7 @@ void PCIBus::Initialize()
 		} else {
 		    Log::Write(Debug, "pcibus", "found device at %02x:%02x:%x",
 			       bus, dev, fun);
-		    memcpy(&pcidevs[pidx].reginfo, &pcibytes[0],
+		    memcpy(&(this->pcidevs[pidx].reginfo), &pcibytes[0],
 			   sizeof(PCIRegister));
 
 		    pcidevs[pidx].bus = bus;
@@ -116,11 +171,13 @@ void PCIBus::Initialize()
     }
 
     Log::Write(Info, "pcibus", "%d PCI devices discovered", pidx);
+    pcidev_count = pidx;
 
     for (unsigned i = 0; i < pidx; i++) {
-	PCIRegister* pr = &pcidevs[i].reginfo;
+	PCIRegister* pr = &(this->pcidevs[i].reginfo);
 	Log::Write(Info, "pcibus", "%d:%d.%d -> \033[36m%04x:%04x\033[0m, command %04x, status %04x, type %02x",
-		   pcidevs[i].bus, pcidevs[i].dev, pcidevs[i].func,
+		   this->pcidevs[i].bus, this->pcidevs[i].dev,
+		   this->pcidevs[i].func,
 		   pr->vendor, pr->device, pr->command, pr->status, pr->header_type);
 	Log::Write(Info, "pcibus", "         class %02x:%02x, rev %02x progid %02x", pr->classcode, pr->subclass, pr->rev, pr->prog_id);
 

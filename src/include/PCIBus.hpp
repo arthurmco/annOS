@@ -88,7 +88,14 @@ namespace annos {
      * PCI Device information
      */
     struct PCIDev {
+	// Bus, device and function
 	uint8_t bus, dev, func;
+
+	// The corresponding device object loaded for that device
+	// a.k.a the driver.
+	Device* devobj = NULL;
+
+	// PCI configuration data bits for that device
 	PCIRegister reginfo;
     };
     
@@ -99,6 +106,10 @@ namespace annos {
 	const unsigned short CONFIG_ADDRESS = 0xCF8;
 	const unsigned short CONFIG_DATA = 0xCFC;
 
+	#define MAX_PCI_DEVS 32
+	PCIDev pcidevs[MAX_PCI_DEVS];
+	unsigned pcidev_count = 0;
+	
 	/**
 	 * Make a read with 'size' bytes in the PCI register 'idx' of device
 	 * 'dev'
@@ -113,6 +124,36 @@ namespace annos {
 	// (i.e, you have to do 2 reads to get the full register)
 	// No one of the PCI common registers needs this. Should I treat this
 	// or this will never happen?
+
+	
+	/**
+	 * Write 'data', with 'size' bytes in the PCI register 'idx' of device
+	 * 'dev'
+	 *
+	 * @return the content read
+	 *
+	 * @remarks Note that 'size' can only be a multiple of 8
+	 */
+	template<uint8_t size>
+	void WritePCIRegister(PCIDev* dev, unsigned idx, unsigned data);
+
+	/**
+	 * Finds PCI device by vendor and device IDs
+	 *
+	 * @returns PCIDev struct containing the device info, or NULL
+	 *          if it couldn't be found
+	 */
+	PCIDev* FindPCIByVendor(uint16_t vendor, uint16_t device);
+
+	/**
+	 * Finds PCI devices by classcode and subclass
+	 * 'list_count' is the size of the array returned
+	 *
+	 * @returns a pointer to an array containing the devices,
+	 *          or NULL if it couldn't find none.
+	 */
+	PCIDev* FindPCIByClass(uint16_t classcode, uint16_t subclass,
+			       unsigned& list_count);
 	
     public:
 	PCIBus()
