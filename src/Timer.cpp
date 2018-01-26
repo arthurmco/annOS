@@ -25,7 +25,7 @@ void Timer::Tick()
 {
     Timer::v += 1;
     if (Timer::v % 1000 == 0)
-	kprintf("%d", ((uint32_t)Timer::v));
+	kprintf("%4d s\n", ((uint32_t)Timer::v/1000));
 }
 
 uint64_t Timer::Get()

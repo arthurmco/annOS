@@ -187,13 +187,11 @@ void kernel_main(BootStruct* bs) {
 	b.Initialize();
     }
 
-    virt_t vaddr = ::x86::VMM::AllocateVirtual(
-	10, ::x86::VMMFlags::ReadWrite | ::x86::VMMFlags::WriteThrough);
-    kprintf("\n %08x \n", vaddr);
-
+    kprintf(" ...pcibus");
     PCIBus pcibus;
     pcibus.Initialize();
-    
+
+    kprintf("\n\n\033[32mSystem loaded\033[0m\n");
     for (;;) {
 	asm volatile("hlt");
     }

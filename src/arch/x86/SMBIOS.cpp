@@ -303,7 +303,7 @@ void SMBios::Initialize()
 	Log::Write(Debug, "smbios", "struct %d is type %02d len %d handle %04x "
 		   "address 0x%08x",
 		   (i+1), smheader->type, smheader->length, smheader->handle,
-		   smbios_ptrg);
+		   smbios_ptr);
 
 	switch (smheader->type) {
 	case 0: this->ParseBiosInformation(smheader); break;
