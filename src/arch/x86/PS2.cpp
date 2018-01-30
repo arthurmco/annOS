@@ -28,6 +28,9 @@ bool PS2::Detect()
  */
 bool PS2::SendCommand(uint8_t code, unsigned port)
 {
+    // Flushes results from other commands
+    while ((in8(STATUS_REG) & 0x1)) {in8(DATA_PORT); }
+    
     if (port == 2) {
 	out8(COMMAND_REG, 0xd4); // Write next byte to second PS/2 port
 	iodelay(100); // with a short delay for the controller to process
@@ -35,17 +38,86 @@ bool PS2::SendCommand(uint8_t code, unsigned port)
     }
     
     out8(DATA_PORT, code);
+
+    unsigned timeout = 0;
+    while (!(in8(STATUS_REG) & 0x1)) {
+	if (timeout == 20) {
+	    Log::Write(Error, "ps2", "Timeout while sending command %02x to port %02x",
+	       code, port);
+	    return false;
+	}
+
+	timeout++;
+	iodelay(10000*timeout);
+	    
+    }
+    
+    iodelay(50000);
+    auto res = in8(DATA_PORT);
+    Log::Write(Debug, "ps2", "Sent %02x, received %02x on port %02x",
+	       code, res, port);
+
+    // If device returned AFK (0xFA) or 0xAA, return true
+    if (res == 0xAA || res == 0xFA)
+	return true;
+
+    Log::Write(Error, "ps2", "Failed to send command %02x to port %02x, returned %02x",
+	       code, port, res);
+    return false;
+}
+
+/**
+ * Reset a device on port 'port'
+ *
+ * Return true on success, false on failure
+ */
+bool PS2::Reset(unsigned port)
+{
+    // Flushes results from other commands
+    while ((in8(STATUS_REG) & 0x1)) {in8(DATA_PORT); }
+    
+    if (port == 2) {
+	out8(COMMAND_REG, 0xd4); // Write next byte to second PS/2 port
+	iodelay(100); // with a short delay for the controller to process
+	              // the command
+    }
+    
+    out8(DATA_PORT, 0xff);
     iodelay(50000);
     auto res = in8(DATA_PORT);
 
-    // If device returned AFK (0xFA) return true
-    if (res == 0xFA)
-	return true;
+    // first 0xAA, then 0xFA, or vice-versa
+    if (res != 0xAA && res != 0xFA) {
+	Log::Write(Error, "ps2", "Failed to reset %02x #1, returned %02x",
+		   port, res);
+	return false;
+    }
 
-    Log::Write(Error, "ps2", "Failed to send command %02x, returned %02x",
-	       code, res);
-    return false;
+    iodelay(1000);
+    if (in8(STATUS_REG) & 0x1) {
+	res = in8(DATA_PORT);
+	if (res != 0xAA && res != 0xFA) {
+	    Log::Write(Error, "ps2", "Failed to reset %02x #2, returned %02x",
+		       port, res);
+	    return false;
+	}
+    }
+
+    iodelay(1000);
+    // A 0x0 might come
+    if (in8(STATUS_REG) & 0x1) {
+	res = in8(DATA_PORT);
+	if (res != 0x0) {
+	    Log::Write(Error, "ps2", "Failed to reset %02x #3, returned %02x",
+		   port, res);
+	    return false;
+	}
+    }
+
+    return true;
 }
+
+
 
 void PS2::Initialize()
 {
@@ -128,6 +200,9 @@ void PS2::Initialize()
     }
 
     // 6 - Reset the devices
+    this->Reset(1);
+    if (this->max_channels >= 2)
+	this->Reset(2);
     
 
     // 7 - Identify the devices
@@ -145,7 +220,6 @@ void PS2::Initialize()
     // And on the second
     this->SendCommand(0xf5, 2); // Disable scanning
     this->SendCommand(0xf2, 2); // Identify
-    
     
     devtype = 0;
     devtype = in8(DATA_PORT);

@@ -40,6 +40,13 @@ namespace annos::x86 {
 	 * Return true on success, false on error
 	 */
 	bool SendCommand(uint8_t code, unsigned port = 1);
+
+	/**
+	 * Reset a device on port 'port'
+	 *
+	 * Return true on success, false on failure
+	 */
+	bool Reset(unsigned port);
 	
     protected:
 	/**
