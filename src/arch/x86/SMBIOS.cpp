@@ -294,8 +294,11 @@ void SMBios::Initialize()
      *   The MapPhysicalAddress starts mapping in the start, so you wouldn't even
      *   use a page properly before it ends 
      */
-    uintptr_t smbios_ptr =  VMM::MapPhysicalAddress(sm_entry->smbios_struct_addr,
-						    (sm_entry->smbios_struct_len/VMM_PAGE_SIZE)+2);
+    uintptr_t smbios_ptr = sm_entry->smbios_struct_addr;
+
+    if (smbios_ptr > 0xf0000)
+	smbios_ptr =  VMM::MapPhysicalAddress(sm_entry->smbios_struct_addr,
+					      (sm_entry->smbios_struct_len/VMM_PAGE_SIZE)+2);
 
     for (int i = 0; i < sm_entry->smbios_struct_count; i++) {
 	SMBiosStrHeader* smheader = (SMBiosStrHeader*)smbios_ptr;
