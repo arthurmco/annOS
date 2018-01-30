@@ -10,6 +10,7 @@
 #include <arch/x86/FaultHandler.hpp>
 #include <arch/x86/IRQHandler.hpp>
 #include <arch/x86/SMBIOS.hpp>
+#include <arch/x86/PS2.hpp>
 #include <PCIBus.hpp>
 
 #include <libk/stdio.h>
@@ -91,6 +92,10 @@ struct MultibootBIF {
     uint32_t mmap_addr;
 };
 
+
+/**
+ * The kernel entry point
+ */
 extern "C"
 void kernel_main(BootStruct* bs) {
     VGAConsole v;
@@ -191,9 +196,14 @@ void kernel_main(BootStruct* bs) {
     PCIBus pcibus;
     pcibus.Initialize();
 
+    kprintf(" ...ps2");
+    ::x86::PS2 ps2;
+    ps2.Initialize();
+    
     kprintf("\n\n\033[32mSystem loaded\033[0m\n");
     for (;;) {
 	asm volatile("hlt");
     }
+
 
 }
