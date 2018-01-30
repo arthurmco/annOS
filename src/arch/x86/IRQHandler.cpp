@@ -75,6 +75,10 @@ static IIRQHandlerDevice* irqHandlers[16][MAX_IRQ_HANDLERS] = {};
  */
 extern "C" void IRQDispatcher(IRQRegs* regs)
 {
+    if (regs->irq_no > 0) {
+	annos::Log::Write(annos::Debug, "irq", "IRQ %d called", regs->irq_no);
+    }
+    
     size_t pos = 0;
     while (irqHandlers[regs->irq_no][pos]) {
 	irqHandlers[regs->irq_no][pos]->OnIRQ(regs);

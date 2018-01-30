@@ -31,7 +31,7 @@ extern "C" uint32_t idt_flush(IDTPointer* ptr);
 void IDT::Register()
 {
     this->_ptr.addr = (uint32_t)&this->_desc[0];
-    this->_ptr.size = sizeof(IDTDescriptor)*40-1;
+    this->_ptr.size = sizeof(IDTDescriptor)*0x80-1;
     
     idt_flush(&this->_ptr);
 }

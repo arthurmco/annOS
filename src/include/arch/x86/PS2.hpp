@@ -39,14 +39,21 @@ namespace annos::x86 {
 	 * Send a command to the device currently selected
 	 * Return true on success, false on error
 	 */
-	bool SendCommand(uint8_t code, unsigned port = 1);
+	bool SendCommand(uint8_t code, unsigned port = 1, int value = -1);
 
 	/**
 	 * Reset a device on port 'port'
 	 *
-	 * Return true on success, false on failure
+	 * @return true on success, false on failure
 	 */
 	bool Reset(unsigned port);
+
+	/**
+	 * Initialize the keyboard
+	 *
+	 * @return true on success, false on failure
+	 */
+	bool InitKeyboard();
 	
     protected:
 	/**

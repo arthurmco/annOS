@@ -88,7 +88,7 @@ _fault_asm_common:
 	
 	mov %esp, %eax //  We save the stack so we can restore it later
 	push %eax
-	
+
 	movl $FaultDispatcher, %eax
   	call *%eax  //  Bran say this preserves the EIP register
 	

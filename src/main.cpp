@@ -199,6 +199,9 @@ void kernel_main(BootStruct* bs) {
     kprintf(" ...ps2");
     ::x86::PS2 ps2;
     ps2.Initialize();
+    ::x86::IRQHandler::SetHandler(1, &ps2);
+    ::x86::IRQHandler::SetHandler(12, &ps2);
+    
     
     kprintf("\n\n\033[32mSystem loaded\033[0m\n");
     for (;;) {

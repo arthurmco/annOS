@@ -26,7 +26,7 @@ bool PS2::Detect()
  * It might be the device in the first channel or in the second
  * Return true on success, false on error
  */
-bool PS2::SendCommand(uint8_t code, unsigned port)
+bool PS2::SendCommand(uint8_t code, unsigned port, int value)
 {
     // Flushes results from other commands
     while ((in8(STATUS_REG) & 0x1)) {in8(DATA_PORT); }
@@ -38,7 +38,12 @@ bool PS2::SendCommand(uint8_t code, unsigned port)
     }
     
     out8(DATA_PORT, code);
+    iodelay(100);
 
+    if (value > 0) {
+	out8(DATA_PORT, (uint8_t)value);
+    }
+    
     unsigned timeout = 0;
     while (!(in8(STATUS_REG) & 0x1)) {
 	if (timeout == 20) {
@@ -227,7 +232,43 @@ void PS2::Initialize()
 	devtype |= (in8(DATA_PORT) << 8);
 
     Log::Write(Info, "ps2", "Second port device type: %04x", devtype);
+
+    this->InitKeyboard();
+
+    // Enable scanning for mouse
+    this->SendCommand(0xf4, 2); // enable scanning, keyboard will send scancodes
+
+    // Read the Controller Config Byte
+    out8(COMMAND_REG, 0x20);
+    iodelay(100);
+    ccb = in8(DATA_PORT);
+
+    out8(COMMAND_REG, 0x60);
+
+    // Enable interrupts for both ports, keep translation disabled
+    ccb |= 0x3;
+
+    out8(DATA_PORT, ccb);
     
+    // Enable both ports
+    out8(COMMAND_REG, 0xAE); // the first;
+    iodelay(1000);
+    if (this->max_channels == 2)
+	out8(COMMAND_REG, 0xA8);
+}
+
+
+/**
+ * Initialize the keyboard
+ *
+ * @return true on success, false on failure
+ */
+bool PS2::InitKeyboard()
+{
+    Log::Write(Info, "ps2", "Initializing keyboard");
+
+    this->SendCommand(0xf0, 1, 0x02); // set to scancode set 2
+    this->SendCommand(0xf4, 1); // enable scanning, keyboard will send scancodes
 }
 
 void PS2::Reset()
@@ -239,5 +280,14 @@ void PS2::Reset()
 /* Called every IRQ */
 void PS2::OnIRQ(IRQRegs* regs)
 {
+    if (regs->irq_no == 1) {
+	uint8_t key = in8(DATA_PORT);
+	Log::Write(Info, "ps2", "Data received: %02x", key);
+    } else if (regs->irq_no == 12) {
+	uint16_t mousek = in8(DATA_PORT);
+	mousek |= (in8(DATA_PORT) << 8);
+	
+	Log::Write(Info, "ps2", "Mouse IRQ received %04x", mousek);
+    }
     
 }
