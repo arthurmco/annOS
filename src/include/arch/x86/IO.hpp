@@ -21,4 +21,6 @@ namespace annos::x86 {
 
     uint32_t in32(uint16_t port);
     void out32(uint16_t port, uint32_t);
+
+    void iodelay(unsigned n);
 }

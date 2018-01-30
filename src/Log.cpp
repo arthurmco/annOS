@@ -10,7 +10,7 @@
 
 using namespace annos;
 
-Console* Log::_cons;
+Console* Log::_cons = NULL;
 
 static void PrintLogLevel(Console* c, LogLevel l)
 {

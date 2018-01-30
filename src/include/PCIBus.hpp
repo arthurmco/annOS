@@ -7,6 +7,7 @@
  */
 
 #include <Device.hpp>
+#include <stddef.h>
 
 namespace annos {
 

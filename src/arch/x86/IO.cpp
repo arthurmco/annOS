@@ -1,5 +1,6 @@
 #include <arch/x86/IO.hpp>
 
+
 /* 
    x86 I/O port communication file
 
@@ -17,6 +18,7 @@ uint8_t annos::x86::in8(uint16_t port)
 
 void annos::x86::out8(uint16_t port, uint8_t val)
 {
+    
     asm("outb %0, %1" : : "a"(val), "Nd"(port) );
 }
 
@@ -44,4 +46,12 @@ uint32_t annos::x86::in32(uint16_t port)
 void annos::x86::out32(uint16_t port, uint32_t val)
 {
     asm("outl %0, %1" : : "a"(val), "Nd"(port) );
+}
+
+void annos::x86::iodelay(unsigned n)
+{
+    volatile unsigned i = 0;
+    for (i = 0; i < n; i++)
+	asm volatile("xor %eax, %eax"); //32 bit NOP
+	
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Console.hpp>
+#include <stddef.h> //for NULL
 
 /*
   Subsystem for the kernel logger
@@ -24,7 +25,8 @@ namespace annos {
 	static Console* _cons;
     public:
 	static void Init(Console* c);
-
+	static bool IsInit() { return (!(Log::_cons == NULL)); }
+	
 	static void Write(LogLevel l, const char* tag, const char* fmt, ...);
 
     };    
